@@ -64,6 +64,7 @@ int multT(double *result, double *A, int N, int lowerT)
 			result[IDX(j,i,N)] = sum; /*enforce symmetry */
 		}
 	}
+	//printMatrix(result, N);
 	return 0;
 }
 	
@@ -89,6 +90,7 @@ int validate(double *A, double * L, int N, double thresh)
 			rdiff = fabs((R[IDX(i,j,N)] - A[IDX(i,j,N)])/A[IDX(i,j,N)]);
 			if (rdiff > thresh)
 			{
+				printf("Hello\n");
 				printf("(%d,%d):R(i,j):%f,A(i,j):%f (delta: %f)\n",
 					i,j,R[IDX(i,j,N)],A[IDX(i,j,N)],
 					rdiff);
@@ -128,7 +130,7 @@ void init_array(int N, int trueRandom, double *A) {
 		}
 	}
 	printf("done random number generation\n");
-	// printMatrix(B,N);
+	//printMatrix(B,N);
 
 	/* Compute B*B^T to get symmetric, positive definite*/
 	multT(A,B,N,0);
@@ -162,41 +164,41 @@ void cholesky(double *L, double *A, int N)
 }
 
 
-int main(int argc, char* argv[]) {
-
-	int n;
-	int i,j,k;
-	double ts, te; /* Starting time and ending time */
-	double *A, *L;
-	double temp;
-	if(argc < ARGS) 
-	{
-		fprintf(stderr,"Wrong # of arguments.\nUsage: %s array_size",argv[0]);
-		return -1;
-	}
-	n = atoi(argv[1]);
-	A = (double *)malloc(n*n*sizeof(double));
-	L = (double *)calloc(n*n,sizeof(double));
-	printf("Initializing \n");
-	init_array(n,0,A);
-	// printf("Initial matrix:\n");
-	// printMatrix(A,n);
-	printf("Computing the Cholesky Factorization of random %dX%d Matrix\n",n,n);
-
-	ts=get_clock();
-	/*Serial decomposition*/
-	cholesky(L,A,n);
-	te=get_clock();
-	//printf("Decomposed matrix:\n");
-	//printMatrix(L,n);
-	printf("Elapsed time=%e\n", te - ts);
-	int badcount = validate(A,L,n,THRESH);
-	if (badcount == 0)
-		printf("solution validates\n");
-	else
-		printf("solution is invalid, %d elements above threshold\n",badcount);
-	cs160validate(A,L,n,THRESH);
-	free(A);
-	free(L);
-	return badcount;
-}
+//int main(int argc, char* argv[]) {
+//
+//	int n;
+//	int i,j,k;
+//	double ts, te; /* Starting time and ending time */
+//	double *A, *L;
+//	double temp;
+//	if(argc < ARGS) 
+//	{
+//		fprintf(stderr,"Wrong # of arguments.\nUsage: %s array_size",argv[0]);
+//		return -1;
+//	}
+//	n = atoi(argv[1]);
+//	A = (double *)malloc(n*n*sizeof(double));
+//	L = (double *)calloc(n*n,sizeof(double));
+//	printf("Initializing \n");
+//	init_array(n,0,A);
+//	// printf("Initial matrix:\n");
+//	// printMatrix(A,n);
+//	printf("Computing the Cholesky Factorization of random %dX%d Matrix\n",n,n);
+//
+//	ts=get_clock();
+//	/*Serial decomposition*/
+//	cholesky(L,A,n);
+//	te=get_clock();
+//	//printf("Decomposed matrix:\n");
+//	//printMatrix(L,n);
+//	printf("Elapsed time=%e\n", te - ts);
+//	int badcount = validate(A,L,n,THRESH);
+//	if (badcount == 0)
+//		printf("solution validates\n");
+//	else
+//		printf("solution is invalid, %d elements above threshold\n",badcount);
+//	cs160validate(A,L,n,THRESH);
+//	free(A);
+//	free(L);
+//	return badcount;
+//}
