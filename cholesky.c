@@ -29,8 +29,7 @@ double get_clock() {
     return (tv.tv_sec * 1.0 + tv.tv_usec * 1.0E-6);
 }
 
-void
-printMatrix(double *A, int N)
+void printMatrix(double *A, int N)
 {
 	int i,j;
 	for(i = 0; i < N; i++){
@@ -55,14 +54,17 @@ int multT(double *result, double *A, int N, int lowerT)
 		for(j = i; j < N; j++) 
 		{
 			double sum = 0.0;
+			//printf("Start sum [%d][%d]\n", i, j);
 			/* if A is lower Triangular don't multiply zeroes */
 			for(k = 0; k < (!lowerT ? N : j+1) ; k++)
 			{
+				//printf("%3.6f\t %3.6f\n", A[IDX(i,k,N)], A[IDX(j,k,N)]);
 				sum += A[IDX(i,k,N)] * A[IDX(j,k,N)];
 			}
 			result[IDX(i,j,N)] = sum;
 			result[IDX(j,i,N)] = sum; /*enforce symmetry */
 		}
+		//printf("Outside\n");
 	}
 	//printMatrix(result, N);
 	return 0;
