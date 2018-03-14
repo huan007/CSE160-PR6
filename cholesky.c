@@ -90,6 +90,10 @@ int validate(double *A, double * L, int N, double thresh)
 		for(j = 0; j < N; j ++)
 		{
 			rdiff = fabs((R[IDX(i,j,N)] - A[IDX(i,j,N)])/A[IDX(i,j,N)]);
+			printf("R: %3.20f\n", R[IDX(i,j,N)]);
+			printf("A: %3.20f\n", A[IDX(i,j,N)]);
+			printf("rdiff :%3.20f\n", rdiff);
+			printf("thresh :%3.20f\n", thresh);
 			if (rdiff > thresh)
 			{
 				printf("Hello\n");

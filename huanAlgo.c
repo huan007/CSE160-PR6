@@ -130,6 +130,23 @@ void multiMatrixLowerTransInt(int **A, int **B, int **C, int M, int P, int N)
 	}/*}}}*/
 }
 
+void multiMatrixLowerTransDouble(double **A, double **B, double **C, int M, int P, int N)
+{
+	int i,j,k;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			double sum = 0;
+			for (k = 0; k < P; k++)
+			{
+				sum += B[i][k] * C[j][k];
+			}
+			A[i][j] = sum;
+		}
+	}/*}}}*/
+}
+
 void sumMatrixInt(int **A, int **B, int M, int N)
 {
 	int i,j;/*{{{*/
@@ -186,6 +203,67 @@ void negMatrixInt(int **A, int M, int N)
 		for (j = 0; j < N; j++)
 		{
 			signed int temp = -(A[i][j]);
+			A[i][j] = temp;
+		}
+	}/*}}}*/
+}
+
+void sumMatrixDouble(double **A, double **B, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			A[i][j] += B[i][j];
+		}
+	}/*}}}*/
+}
+
+void subMatrixDouble(double **A, double **B, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			A[i][j] -= B[i][j];
+		}
+	}/*}}}*/
+}
+
+void copyMatrixDouble(double **A, double **B, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			A[i][j] = B[i][j];
+		}
+	}/*}}}*/
+}
+
+void zeroMatrixDouble(double **A, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			A[i][j] = 0.0f;
+		}
+	}/*}}}*/
+}
+
+void negMatrixDouble(double **A, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			double temp = -(A[i][j]);
 			A[i][j] = temp;
 		}
 	}/*}}}*/
@@ -286,6 +364,37 @@ void blockCholeskyInt(int ***A, int*** L, int blockCount, int blockSize)
 	/*}}}*/
 }
 
+void blockCholeskyDouble(double ***A, double*** L, int blockCount, int blockSize)
+{
+	sumMatrixDouble(L[IDX(0,0,blockCount)], A[IDX(0,0,blockCount)], blockSize,/*{{{*/
+			blockSize);
+	int i,j;
+	
+	//Create a copy of A
+	double ***newA = malloc(blockCount * blockCount * sizeof(double**));
+	for (i = 0; i < blockCount; i++)
+	{
+		for (j = 0; j < blockCount; j++)
+		{
+			createContiguousArrayDouble(&(newA[IDX(i,j,blockCount)]), blockSize, blockSize);
+			copyMatrixDouble(newA[IDX(i,j,blockCount)], A[IDX(i,j,blockCount)], 
+				blockSize, blockSize);
+		}
+	}
+
+	blockDouble(newA, L, blockCount, blockSize);
+	//Free copy
+	for (i = 0; i < blockCount; i++)
+	{
+		for (j = 0; j < blockCount; j++)
+		{
+			deleteMatrixDouble(newA[IDX(i,j,blockCount)], blockSize, blockSize);
+		}
+	}
+	free(newA);
+	/*}}}*/
+}
+
 void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 {
 	if (blockCount == 1)/*{{{*/
@@ -368,15 +477,6 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 			deleteMatrixInt(L21LT21, blockSize, blockSize);
 		}
 	}
-	//printf("A22 Right after (%d, %d)\n", 2, 2);
-	//printInt(&(A[IDX(2,2, blockCount)]), blockSize, blockSize);
-	//printf("After\n");
-	//for (i = 1; i < blockCount; i++)
-	//{
-	//	printf("L21[%d]\n", i);
-	//	printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
-	//}
-
 	//------Recursion: Construct new A and L with decremented size-----
 	int newBlockCount = blockCount - 1;
 	int ***newA = malloc(newBlockCount * newBlockCount * sizeof(int**));
@@ -405,6 +505,119 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 	free(newA);
 	free(newL);
 	deleteMatrixInt(LT11, blockSize, blockSize);
+	/*}}}*/
+}
+
+void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
+{
+	if (blockCount == 1)/*{{{*/
+	{
+		cholesky(**L, **A, blockSize);
+		return;
+	}
+	
+	int i,j,k;
+	double** LT11;
+
+	createContiguousArrayDouble(&LT11, blockSize, blockSize);
+
+	//Map top left of the block
+	double **A11 = A[IDX(0,0, blockCount)];
+	double **L11 = L[IDX(0,0, blockCount)];
+	//------STEP 1: Calculate top left------
+	cholesky(*L11, *A11, blockSize);
+	//printMatrixInt(*L11, blockSize);
+	//printf("Hello new stack\n");
+	//printf("BlockCount: %d\n", blockCount);
+	//printf("A11:\n");
+	//printInt(&A11, blockSize, blockSize);
+	//printf("L11:\n");
+	//printInt(&L11, blockSize, blockSize);
+
+	//Inverting L11, we will need it to solve L panel
+	for (i = 0; i < blockSize; i++)
+	{
+		for (j = i; j < blockSize; j++)
+		{
+			LT11[i][j] = L11[j][i];
+		}
+	}
+		
+	//printf("LT11\n");
+	//printInt(&LT11, blockSize, blockSize);
+	//------STEP 2: Calculate L panel-------
+	for (i = 1; i < blockCount; i++)
+	{
+		computeMatrixDouble(A[IDX(i, 0, blockCount)], L[IDX(i, 0, blockCount)], 
+			LT11, blockSize, blockSize);
+		//printInt(&(A[IDX(i,0, blockCount)]), blockSize, blockSize);
+		//printf("L21[%d]\n", i);
+		//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
+	}
+	//------STEP 3: Update A22-------------
+	//printf("Update...\n");
+	for (i = 1; i < blockCount; i++)
+	{
+		for (j = 1; j < i+1; j++)
+		{
+			//printf("L%d0 * LT%d0\n", i, j);
+			double ** L21LT21;
+			createContiguousArrayDouble(&L21LT21, blockSize, blockSize);
+			//Calculate L21 * LT21
+			multiMatrixLowerTransDouble(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
+				blockSize, blockSize, blockSize);
+			//printf("L%d0\n", i);
+			//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
+			//printf("LT%d0\n", j);
+			//printInt(&(L[IDX(j,0, blockCount)]), blockSize, blockSize);
+			//printf("L21LT21\n", j);
+			//printInt(&(L21LT21), blockSize, blockSize);
+			//Copy A22 to L22
+			//sumMatrixInt(L[IDX(i,j,blockCount)], A[IDX(i,j,blockCount)], blockSize,
+			//	blockSize);
+			//printf("A22\n", j);
+			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
+			//printf("L22\n", j);
+			//printInt(&(L[IDX(i,j, blockCount)]), blockSize, blockSize);
+			//Subtract it from A22
+			subMatrixDouble(A[IDX(i,j, blockCount)], L21LT21, blockSize, blockSize); 
+			//printf("A22 (After) with (%d, %d)\n", i, j);
+			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
+			//printf("\n");
+			
+			//printf("L22[1][1] (After (%d)(%d)\n", i, j);
+			//printInt(&(L[IDX(1,1, blockCount)]), blockSize, blockSize);
+			deleteMatrixDouble(L21LT21, blockSize, blockSize);
+		}
+	}
+	//------Recursion: Construct new A and L with decremented size-----
+	int newBlockCount = blockCount - 1;
+	double ***newA = malloc(newBlockCount * newBlockCount * sizeof(double**));
+	double ***newL = malloc(newBlockCount * newBlockCount * sizeof(double**));
+	
+	for (i = 0; i < newBlockCount; i++)
+	{
+		for (j = 0; j < newBlockCount; j++)
+		{
+			int newI, newJ;
+			newI = i + 1;
+			newJ = j + 1;
+			//printf("A22 with (%d, %d)\n", newI, newJ);
+			//printInt(&(A[IDX(newI,newJ, blockCount)]), blockSize, blockSize);
+			newA[IDX(i, j, newBlockCount)] = A[IDX(newI, newJ, blockCount)];
+			//printf("newA[%d][%d]\n", i, j);
+			//printInt(&(newA[IDX(i,j,newBlockCount)]), blockSize, blockSize);
+			newL[IDX(i, j, newBlockCount)] = L[IDX(newI, newJ, blockCount)];
+			//printf("newL[%d][%d]\n", i, j);
+			//printInt(&(newL[IDX(i,j,newBlockCount)]), blockSize, blockSize);
+			//printf("A22 Right after (%d, %d)\n", i, j);
+			//printInt(&(A[IDX(2,2, blockCount)]), blockSize, blockSize);
+		}
+	}
+	blockDouble(newA, newL, newBlockCount, blockSize);
+	free(newA);
+	free(newL);
+	deleteMatrixDouble(LT11, blockSize, blockSize);
 	/*}}}*/
 }
 
@@ -523,6 +736,14 @@ void fullToBlock(int ***block, int **full, int blockCount, int blockSize)
 }
 
 void deleteMatrixInt(int **u, int localM, int localN)
+{
+	//printf("u[0] = %p\n", u[0]);/*{{{*/
+	//printf("u = %p\n", u);
+	free(u[0]);
+	free(u);/*}}}*/
+}
+
+void deleteMatrixDouble(double **u, int localM, int localN)
 {
 	//printf("u[0] = %p\n", u[0]);/*{{{*/
 	//printf("u = %p\n", u);

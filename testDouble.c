@@ -74,11 +74,11 @@ int main(int argc, char** argv)
 		multT(*A, *Y, N, 0); 
 		//printMatrix(*A, N);
 		//printf("\n\n");
-		//printMatrix(*Z, N);
-		//printf("\n\n");
-		//printMatrix(*Y, N);
-		//printf("\n\n");
-		//printMatrix(*X, N);
+		printMatrix(*Z, N);
+		printf("\n\n");
+		printMatrix(*Y, N);
+		printf("\n\n");
+		printMatrix(*X, N);
 		//Compute result
 		computeMatrixDouble(Z, result, Y, M, N);
 		multiMatrixDouble(multiResult, result, Y, M, N, N);
