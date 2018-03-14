@@ -13,3 +13,8 @@ testd: algo testDouble.c
 
 operation: algo testOperationInt.c
 	gcc -g -o operation testOperationInt.c huanAlgo.o -lm
+
+clean:
+	rm *.o
+	rm testD
+	rm operation

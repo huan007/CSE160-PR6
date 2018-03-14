@@ -9,7 +9,7 @@
 
 void createContiguousArrayDouble(double ***u, int localM, int localN)
 {
-	int i, j;
+	int i, j;/*{{{*/
 	//Allocating contiguous 2d array
 	double *tempArray = (double *) malloc(localM * localN * sizeof(double));
 	//Creating arrays of  double pointers
@@ -21,12 +21,12 @@ void createContiguousArrayDouble(double ***u, int localM, int localN)
 		{
 			(*u)[i][j] = 0;
 		}
-	}
+	}/*}}}*/
 }
 
 void createContiguousArrayInt(int ***u, int localM, int localN)
 {
-	int i, j;
+	int i, j;/*{{{*/
 	//Allocating contiguous 2d array
 	int *tempArray = (int *) malloc(localM * localN * sizeof(int));
 	//Creating arrays of  int pointers
@@ -38,12 +38,12 @@ void createContiguousArrayInt(int ***u, int localM, int localN)
 		{
 			(*u)[i][j] = 0;
 		}
-	}
+	}/*}}}*/
 }
 
 void printInt(signed int ***array, int localM, int localN)
 {
-	int i, j;
+	int i, j;/*{{{*/
 	//Begin printing
 	for (i = 0; i < localM; i++)
 	{
@@ -53,12 +53,12 @@ void printInt(signed int ***array, int localM, int localN)
 		}
 		printf("\n");
 	}
-	//End printing
+	//End printing/*}}}*/
 }
 
 void printDouble(double ***array, double localM, double localN)
 {
-	int i, j;
+	int i, j;/*{{{*/
 	//Begin printing
 	for (i = 0; i < localM; i++)
 	{
@@ -68,12 +68,12 @@ void printDouble(double ***array, double localM, double localN)
 		}
 		printf("\n");
 	}
-	//End printing
+	//End printing/*}}}*/
 }
 
 void multiMatrixInt(int **A, int **B, int **C, int M, int P, int N)
 {
-	int i,j,k;
+	int i,j,k;/*{{{*/
 	for (i = 0; i < M; i++)
 	{
 		for (j = 0; j < N; j++)
@@ -87,12 +87,12 @@ void multiMatrixInt(int **A, int **B, int **C, int M, int P, int N)
 			//printf("Z[%d][%d] = %d\n", i, j, sum);
 			A[i][j] = sum;
 		}
-	}
+	}/*}}}*/
 }
 
 void multiMatrixDouble(double **A, double **B, double **C, int M, int P, int N)
 {
-	int i,j,k;
+	int i,j,k;/*{{{*/
 	for (i = 0; i < M; i++)
 	{
 		for (j = 0; j < N; j++)
@@ -106,36 +106,55 @@ void multiMatrixDouble(double **A, double **B, double **C, int M, int P, int N)
 			//printf("Z[%d][%d] = %d\n", i, j, sum);
 			A[i][j] = sum;
 		}
-	}
+	}/*}}}*/
+}
+
+void multiMatrixLowerTransInt(int **A, int **B, int **C, int M, int P, int N)
+{
+	int i,j,k;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			int sum = 0;
+			for (k = 0; k < j+1; k++)
+			{
+				//printf("X[%d][%d] = %d\tY[%d][%d] = %d\n", i,k, B[i][k], k, j, C[k][j]);
+				sum += B[i][k] * C[j][k];
+			}
+			//printf("Z[%d][%d] = %d\n", i, j, sum);
+			A[i][j] = sum;
+		}
+	}/*}}}*/
 }
 
 void sumMatrixInt(int **A, int **B, int M, int N)
 {
-	int i,j;
+	int i,j;/*{{{*/
 	for (i = 0; i < M; i++)
 	{
 		for (j = 0; j < N; j++)
 		{
 			A[i][j] += B[i][j];
 		}
-	}
+	}/*}}}*/
 }
 
 void subMatrixInt(int **A, int **B, int M, int N)
 {
-	int i,j;
+	int i,j;/*{{{*/
 	for (i = 0; i < M; i++)
 	{
 		for (j = 0; j < N; j++)
 		{
 			A[i][j] -= B[i][j];
 		}
-	}
+	}/*}}}*/
 }
 
 void negMatrixInt(int **A, int M, int N)
 {
-	int i,j;
+	int i,j;/*{{{*/
 	for (i = 0; i < M; i++)
 	{
 		for (j = 0; j < N; j++)
@@ -143,7 +162,7 @@ void negMatrixInt(int **A, int M, int N)
 			signed int temp = -(A[i][j]);
 			A[i][j] = temp;
 		}
-	}
+	}/*}}}*/
 }
 
 /*
@@ -155,7 +174,7 @@ void negMatrixInt(int **A, int M, int N)
  */
 void computeMatrix(int** Z, int** X, int** Y, int M, int N)
 {
-	int row, col;
+	int row, col;/*{{{*/
 	int i, j;
 	int top, bottom;
 
@@ -176,12 +195,12 @@ void computeMatrix(int** Z, int** X, int** Y, int M, int N)
 			X[row][col] = top / Y[col][col];
 			//printf("X[%d][%d] = %d\n", row, col, X[row][col]);
 		}
-	}
+	}/*}}}*/
 }
 
 void computeMatrixDouble(double** Z, double** X, double** Y, int M, int N)
 {
-	int row, col;
+	int row, col;/*{{{*/
 	int i, j;
 	long double top, bottom;
 
@@ -207,13 +226,16 @@ void computeMatrixDouble(double** Z, double** X, double** Y, int M, int N)
 			//printf("top: \t%6.20f\n", top);
 			//printf("X[%d][%d] = %d\n", row, col, X[row][col]);
 		}
-	}
+	}/*}}}*/
 }
 
 void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 {
-	if (blockCount == 1)
+	if (blockCount == 1)/*{{{*/
+	{
 		choleskyInt(**L, **A, blockSize);
+		return;
+	}
 	
 	int i,j,k;
 	int*** A21;
@@ -229,8 +251,11 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 	int **L11 = L[IDX(0,0, blockCount)];
 	//------STEP 1: Calculate top left------
 	choleskyInt(*L11, *A11, blockSize);
+	//printMatrixInt(*L11, blockSize);
+	printf("Hello new stack\n");
+	printf("BlockCount: %d\n", blockCount);
 
-	//Inverting L11
+	//Inverting L11, we will need it to solve L panel
 	for (i = 0; i < blockSize; i++)
 	{
 		for (j = i; j < blockSize; j++)
@@ -244,18 +269,61 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 	{
 		computeMatrix(A[IDX(i, 0, blockCount)], L[IDX(i, 0, blockCount)], 
 			LT11, blockSize, blockSize);
+		printf("L21[%d]\n", i);
+		printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 	}
 	//------STEP 3: Update A22-------------
+	for (i = 1; i < blockCount; i++)
+	{
+		for (j = 1; j < i+1; j++)
+		{
+			printf("L%d0 * LT%d0\n", i, j);
+			int ** L21LT21;
+			createContiguousArrayInt(&L21LT21, blockSize, blockSize);
+			printf("L%d0\n", i);
+			printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
+			printf("LT%d0\n", j);
+			printInt(&(L[IDX(j,0, blockCount)]), blockSize, blockSize);
+			printf("\n");
+			//Calculate L21 * LT21
+			multiMatrixLowerTransInt(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
+				blockSize, blockSize, blockSize);
+			//Subtract it from A22
+			subMatrixInt(L[IDX(i,j, blockCount)], L21LT21, blockSize, blockSize); 
+		}
+	}
+	//printf("After\n");
+	//for (i = 1; i < blockCount; i++)
+	//{
+	//	printf("L21[%d]\n", i);
+	//	printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
+	//}
+
+	//------Recursion: Construct new A and L with decremented size-----
+	int newBlockCount = blockCount - 1;
+	int ***newA = malloc(newBlockCount * newBlockCount * sizeof(int**));
+	int ***newL = malloc(newBlockCount * newBlockCount * sizeof(int**));
+	
+	for (i = 0; i < newBlockCount; i++)
+	{
+		for (j = 0; j < newBlockCount; j++)
+		{
+			newA[IDX(i, j, newBlockCount)] = A[IDX(i+1, j+1, blockCount)];
+			newL[IDX(i, j, newBlockCount)] = L[IDX(i+1, j+1, blockCount)];
+		}
+	}
+	blockInt(newA, newL, newBlockCount, blockSize);
+	/*}}}*/
 }
 
 void printMatrixInt(int *A, int N)
 {
-	int i,j;
+	int i,j;/*{{{*/
 	for(i = 0; i < N; i++){
 		for(j = 0; j < N; j++)
 			printf("%d ", A[IDX(i,j,N)]);
 		printf("\n");
-	}
+	}/*}}}*/
 }
 
 /* Multiply A*A^T.  
@@ -266,7 +334,7 @@ void printMatrixInt(int *A, int N)
  */
 int multTInt(int *result, int *A, int N, int lowerT)
 {
-	int i,j,k;
+	int i,j,k;/*{{{*/
 	bzero(result, N*N*sizeof(int));
 	for(i = 0; i < N; i++)
 	{
@@ -287,7 +355,7 @@ int multTInt(int *result, int *A, int N, int lowerT)
 		//printf("Outside\n");
 	}
 	//printMatrix(result, N);
-	return 0;
+	return 0;/*}}}*/
 }
 
 /* Compute the Cholesky Decomposition of A 
@@ -297,7 +365,7 @@ int multTInt(int *result, int *A, int N, int lowerT)
  */
 void choleskyInt(int *L, int *A, int N)
 {
-	int i,j,k;
+	int i,j,k;/*{{{*/
 	bzero(L,N*N*sizeof(int));
 	int temp;
 	for (i = 0; i < N; i++){
@@ -313,5 +381,53 @@ void choleskyInt(int *L, int *A, int N)
 			}
 		  }
 	}
+/*}}}*/
+}
 
+void blockToFull(int ***block, int **full, int blockCount, int blockSize)
+{
+	int blockRow, blockCol, globalRow, globalCol;/*{{{*/
+	for (blockRow = 0; blockRow < blockCount; blockRow++)
+	{
+		for (blockCol = 0; blockCol < blockCount; blockCol++)
+		{
+			int **currBlock = malloc(blockSize * sizeof(int*));
+			//Offset added to match position in global array
+			int offsetRow = blockRow * blockSize;
+			int offsetCol = blockCol * blockSize;
+
+			for (globalRow = 0; globalRow < blockSize; globalRow++)
+			{
+				for (globalCol = 0; globalCol < blockSize; globalCol++)
+				{
+					full[globalRow+offsetRow][globalCol+offsetCol] = 
+						block[IDX(blockRow, blockCol, blockCount)][globalRow][globalCol];
+				}
+			}
+		}
+	}/*}}}*/
+}
+
+void fullToBlock(int ***block, int **full, int blockCount, int blockSize)
+{
+	int blockRow, blockCol, globalRow, globalCol;/*{{{*/
+	for (blockRow = 0; blockRow < blockCount; blockRow++)
+	{
+		for (blockCol = 0; blockCol < blockCount; blockCol++)
+		{
+			int **currBlock = malloc(blockSize * sizeof(int*));
+			//Offset added to match position in global array
+			int offsetRow = blockRow * blockSize;
+			int offsetCol = blockCol * blockSize;
+
+			for (globalRow = 0; globalRow < blockSize; globalRow++)
+			{
+				for (globalCol = 0; globalCol < blockSize; globalCol++)
+				{
+					block[IDX(blockRow, blockCol, blockCount)][globalRow][globalCol] = 
+						full[globalRow+offsetRow][globalCol+offsetCol];
+				}
+			}
+		}
+	}/*}}}*/
 }
