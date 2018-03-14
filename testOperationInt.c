@@ -54,10 +54,11 @@ int main(int argc, char** argv)
 
 
 
-	srand(time(NULL));
+	srand(1);
 	for (count = 0; count < trials; count++)
 	{
 		printf("Iteration: %d\n", count);
+		printf("Setting up...\n");
 		//Generate randum integers in X;
 		//for (i = 0; i < M; i++)
 		//{
@@ -129,41 +130,46 @@ int main(int argc, char** argv)
 		{
 			for (j = 0; j < blockCount; j++)
 			{
-				printf("Block (%d,%d)\n", i, j);				
-				printInt(&(blockX[IDX(i, j, blockCount)]), blockSize, blockSize);
+				//printf("Block (%d,%d)\n", i, j);				
+				//printInt(&(blockX[IDX(i, j, blockCount)]), blockSize, blockSize);
 			}
 		}
 
-		printf("Converting block to full...\n");
+		//printf("Converting block to full...\n");
 		blockToFull(blockX, fullX, blockCount, blockSize);
 		blockToFull(blockY, fullY, blockCount, blockSize);
 		blockToFull(blockZ, fullZ, blockCount, blockSize);
 		blockToFull(blockResult, fullResult, blockCount, blockSize);
-		printf("fullX\n");
-		printInt(&fullX, N, N);
-		printf("fullY\n");
-		printInt(&fullY, N, N);
-		printf("fullZ\n");
-		printInt(&fullZ, N, N);
+		//printf("fullX\n");
+		//printInt(&fullX, N, N);
+		//printf("fullY\n");
+		//printInt(&fullY, N, N);
+		//printf("fullZ\n");
+		//printInt(&fullZ, N, N);
 
-		printf("Calling blockInt...\n");
-		blockInt(blockZ, blockResult, blockCount, blockSize);
+		//printf("Calling blockInt...\n");
+		printf("Calculating...\n");
+		blockCholeskyInt(blockZ, blockResult, blockCount, blockSize);
 		blockToFull(blockResult, fullResult, blockCount, blockSize);
-		printf("fullX\n");
-		printInt(&fullX, N, N);
-		printf("fullResult\n");
-		printInt(&fullResult, N, N);
+		blockToFull(blockZ, fullZ, blockCount, blockSize);
+		//printf("fullZ\n");
+		//printInt(&fullZ, N, N);
+		//printf("fullX\n");
+		//printInt(&fullX, N, N);
+		//printf("fullResult\n");
+		//printInt(&fullResult, N, N);
 
 
 		//Compute result
 		//computeMatrix(Z, result, Y, M, N);
 
 		//Validation
+		printf("Validating...\n");
 		for (i = 0; i < M; i++)
 		{
 			for (j = 0; j < N; j++)
 			{
-				if (X[i][j] != fullX [i][j] || Y[i][j] != fullY[i][j] || Z[i][j] != fullZ[i][j])
+				if (X[i][j] != fullX [i][j] || Y[i][j] != fullY[i][j] || Z[i][j] != fullZ[i][j] || fullX[i][j] != fullResult[i][j])
 				{
 					printf("ERROR: Result is different\n");
 					printf("X:\n");

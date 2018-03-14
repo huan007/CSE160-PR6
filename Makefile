@@ -3,7 +3,7 @@ algo: huanAlgo.c
 
 
 test: algo testInt.c
-	gcc -g -o test testInt.c huanAlgo.o
+	gcc -g -o test testInt.c huanAlgo.o -lm
 
 test2: algo testInt2.c
 	gcc -g -o test2 testInt2.c huanAlgo.o -lm

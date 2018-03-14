@@ -29,8 +29,10 @@ void createContiguousArrayInt(int ***u, int localM, int localN)
 	int i, j;/*{{{*/
 	//Allocating contiguous 2d array
 	int *tempArray = (int *) malloc(localM * localN * sizeof(int));
+	printf("tempArray: %p\n", tempArray);
 	//Creating arrays of  int pointers
 	*u = (int **) malloc(localM * sizeof(int *));
+	printf("*u: %p\n", *u);
 	for (i = 0; i < localM; i++)
 	{
 		(*u)[i] = &(tempArray[localN*i]);
@@ -117,7 +119,7 @@ void multiMatrixLowerTransInt(int **A, int **B, int **C, int M, int P, int N)
 		for (j = 0; j < N; j++)
 		{
 			int sum = 0;
-			for (k = 0; k < j+1; k++)
+			for (k = 0; k < P; k++)
 			{
 				//printf("X[%d][%d] = %d\tY[%d][%d] = %d\n", i,k, B[i][k], k, j, C[k][j]);
 				sum += B[i][k] * C[j][k];
@@ -148,6 +150,30 @@ void subMatrixInt(int **A, int **B, int M, int N)
 		for (j = 0; j < N; j++)
 		{
 			A[i][j] -= B[i][j];
+		}
+	}/*}}}*/
+}
+
+void copyMatrixInt(int **A, int **B, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			A[i][j] = B[i][j];
+		}
+	}/*}}}*/
+}
+
+void zeroMatrixInt(int **A, int M, int N)
+{
+	int i,j;/*{{{*/
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < N; j++)
+		{
+			A[i][j] = 0;
 		}
 	}/*}}}*/
 }
@@ -229,6 +255,35 @@ void computeMatrixDouble(double** Z, double** X, double** Y, int M, int N)
 	}/*}}}*/
 }
 
+void blockCholeskyInt(int ***A, int*** L, int blockCount, int blockSize)
+{
+	sumMatrixInt(L[IDX(0,0,blockCount)], A[IDX(0,0,blockCount)], blockSize,/*{{{*/
+			blockSize);
+	int i,j;
+	
+	//Create a copy of A
+	int ***newA = malloc(blockCount * blockCount * sizeof(int**));
+	for (i = 0; i < blockCount; i++)
+	{
+		for (j = 0; j < blockCount; j++)
+		{
+			createContiguousArrayInt(&(newA[IDX(i,j,blockCount)]), blockSize, blockSize);
+			copyMatrixInt(newA[IDX(i,j,blockCount)], A[IDX(i,j,blockCount)], 
+				blockSize, blockSize);
+		}
+	}
+
+	blockInt(newA, L, blockCount, blockSize);/*}}}*/
+	//Free copy
+	for (i = 0; i < blockCount; i++)
+	{
+		for (j = 0; j < blockCount; j++)
+		{
+			deleteMatrixInt(newA[IDX(i,j,blockCount)], blockSize, blockSize);
+		}
+	}
+}
+
 void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 {
 	if (blockCount == 1)/*{{{*/
@@ -252,8 +307,12 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 	//------STEP 1: Calculate top left------
 	choleskyInt(*L11, *A11, blockSize);
 	//printMatrixInt(*L11, blockSize);
-	printf("Hello new stack\n");
-	printf("BlockCount: %d\n", blockCount);
+	//printf("Hello new stack\n");
+	//printf("BlockCount: %d\n", blockCount);
+	//printf("A11:\n");
+	//printInt(&A11, blockSize, blockSize);
+	//printf("L11:\n");
+	//printInt(&L11, blockSize, blockSize);
 
 	//Inverting L11, we will need it to solve L panel
 	for (i = 0; i < blockSize; i++)
@@ -264,34 +323,55 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 		}
 	}
 		
+	//printf("LT11\n");
+	//printInt(&LT11, blockSize, blockSize);
 	//------STEP 2: Calculate L panel-------
 	for (i = 1; i < blockCount; i++)
 	{
 		computeMatrix(A[IDX(i, 0, blockCount)], L[IDX(i, 0, blockCount)], 
 			LT11, blockSize, blockSize);
-		printf("L21[%d]\n", i);
-		printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
+		//printf("A21[%d]\n", i);
+		//printInt(&(A[IDX(i,0, blockCount)]), blockSize, blockSize);
+		//printf("L21[%d]\n", i);
+		//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 	}
 	//------STEP 3: Update A22-------------
+	//printf("Update...\n");
 	for (i = 1; i < blockCount; i++)
 	{
 		for (j = 1; j < i+1; j++)
 		{
-			printf("L%d0 * LT%d0\n", i, j);
+			//printf("L%d0 * LT%d0\n", i, j);
 			int ** L21LT21;
 			createContiguousArrayInt(&L21LT21, blockSize, blockSize);
-			printf("L%d0\n", i);
-			printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
-			printf("LT%d0\n", j);
-			printInt(&(L[IDX(j,0, blockCount)]), blockSize, blockSize);
-			printf("\n");
 			//Calculate L21 * LT21
 			multiMatrixLowerTransInt(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
 				blockSize, blockSize, blockSize);
+			//printf("L%d0\n", i);
+			//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
+			//printf("LT%d0\n", j);
+			//printInt(&(L[IDX(j,0, blockCount)]), blockSize, blockSize);
+			//printf("L21LT21\n", j);
+			//printInt(&(L21LT21), blockSize, blockSize);
+			//Copy A22 to L22
+			//sumMatrixInt(L[IDX(i,j,blockCount)], A[IDX(i,j,blockCount)], blockSize,
+			//	blockSize);
+			//printf("A22\n", j);
+			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
+			//printf("L22\n", j);
+			//printInt(&(L[IDX(i,j, blockCount)]), blockSize, blockSize);
 			//Subtract it from A22
-			subMatrixInt(L[IDX(i,j, blockCount)], L21LT21, blockSize, blockSize); 
+			subMatrixInt(A[IDX(i,j, blockCount)], L21LT21, blockSize, blockSize); 
+			//printf("A22 (After) with (%d, %d)\n", i, j);
+			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
+			//printf("\n");
+			
+			//printf("L22[1][1] (After (%d)(%d)\n", i, j);
+			//printInt(&(L[IDX(1,1, blockCount)]), blockSize, blockSize);
 		}
 	}
+	//printf("A22 Right after (%d, %d)\n", 2, 2);
+	//printInt(&(A[IDX(2,2, blockCount)]), blockSize, blockSize);
 	//printf("After\n");
 	//for (i = 1; i < blockCount; i++)
 	//{
@@ -308,8 +388,19 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 	{
 		for (j = 0; j < newBlockCount; j++)
 		{
-			newA[IDX(i, j, newBlockCount)] = A[IDX(i+1, j+1, blockCount)];
-			newL[IDX(i, j, newBlockCount)] = L[IDX(i+1, j+1, blockCount)];
+			int newI, newJ;
+			newI = i + 1;
+			newJ = j + 1;
+			//printf("A22 with (%d, %d)\n", newI, newJ);
+			//printInt(&(A[IDX(newI,newJ, blockCount)]), blockSize, blockSize);
+			newA[IDX(i, j, newBlockCount)] = A[IDX(newI, newJ, blockCount)];
+			//printf("newA[%d][%d]\n", i, j);
+			//printInt(&(newA[IDX(i,j,newBlockCount)]), blockSize, blockSize);
+			newL[IDX(i, j, newBlockCount)] = L[IDX(newI, newJ, blockCount)];
+			//printf("newL[%d][%d]\n", i, j);
+			//printInt(&(newL[IDX(i,j,newBlockCount)]), blockSize, blockSize);
+			//printf("A22 Right after (%d, %d)\n", i, j);
+			//printInt(&(A[IDX(2,2, blockCount)]), blockSize, blockSize);
 		}
 	}
 	blockInt(newA, newL, newBlockCount, blockSize);
@@ -391,7 +482,7 @@ void blockToFull(int ***block, int **full, int blockCount, int blockSize)
 	{
 		for (blockCol = 0; blockCol < blockCount; blockCol++)
 		{
-			int **currBlock = malloc(blockSize * sizeof(int*));
+			//int **currBlock = malloc(blockSize * sizeof(int*));
 			//Offset added to match position in global array
 			int offsetRow = blockRow * blockSize;
 			int offsetCol = blockCol * blockSize;
@@ -415,7 +506,7 @@ void fullToBlock(int ***block, int **full, int blockCount, int blockSize)
 	{
 		for (blockCol = 0; blockCol < blockCount; blockCol++)
 		{
-			int **currBlock = malloc(blockSize * sizeof(int*));
+			//int **currBlock = malloc(blockSize * sizeof(int*));
 			//Offset added to match position in global array
 			int offsetRow = blockRow * blockSize;
 			int offsetCol = blockCol * blockSize;
@@ -430,4 +521,12 @@ void fullToBlock(int ***block, int **full, int blockCount, int blockSize)
 			}
 		}
 	}/*}}}*/
+}
+
+void deleteMatrixInt(int **u, int localM, int localN)
+{
+	printf("u[0] = %p\n", u[0]);/*{{{*/
+	printf("u = %p\n", u);
+	free(u[0]);
+	free(u);/*}}}*/
 }
