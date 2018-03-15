@@ -116,41 +116,27 @@ int validate(double *A, double * L, int N, double thresh)
 */
 void init_array(int N, int trueRandom, double *A) {
 	int i,j,k;
-	
+	struct drand48_data rbuf;
+	if (trueRandom)
+		srand48_r((long int) time(NULL),&rbuf);
+	else
+		srand48_r(1L,&rbuf);
+
 	double *B = calloc(N * N, sizeof(double));
 
 	printf("Random number generation\n");
-	printf("thread_count : %d\n", thread_count);
-	#pragma omp parallel for num_threads(thread_count) schedule (static, 1)
 	for(i = 0; i < N; i++)
 	{
-		int rank = 0;
-#ifdef _OPENMP
-	rank = omp_get_thread_num();
-	//printf("Hello from rank %d\n", rank);
-	//printf("Rank %d takes row %d\n", rank, i);
-#endif
-		#pragma omp private(rbuf)
-		struct drand48_data rbuf;
-		if (trueRandom)
-			srand48_r((long int) time(NULL),&rbuf);
-		else
-			srand48_r(1L + rank,&rbuf);
 		for(j = 0; j < N; j++) 
 		{
-			#pragma omp critical
 			drand48_r(&rbuf,&B[IDX(i,j,N)]);
-			if (B[IDX(i,j,N)] == 0)
-				printf("ZERO!\n");
-			B[IDX(i,j,N)] += MINNUM;
 			B[IDX(i,j,N)] *= SCALE;
-			//printf("Rank %d: B(%d, %d): = %6.15f\n", rank, i, j, B[IDX(i,j,N)]);
 		}
 	}
 	printf("done random number generation\n");
 	//printMatrix(B,N);
 
-	/* Compute B*B^T to get symmetric, positive definite*/
+	/* Compute B*B^T to get symmetric, positive definite */
 	multT(A,B,N,0);
 	free (B);
 }
