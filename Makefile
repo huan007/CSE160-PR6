@@ -30,6 +30,10 @@ cho: algo chopara choser cholesky.c cholesky.h choleskyPara.c
 	gcc -g -o chopara -O3 choleskyPara.c cholesky.c cs160validate.c -lm -fopenmp -lpthread
 	gcc -g -o choser -O3 choleskyPara.c cholesky.c cs160validate.c -lm 
 
+mp:	mp.c
+	gcc -g -o mp mp.c -lm -lpthread -fopenmp
+	gcc -g -o mpser mp.c -lm -lpthread 
+
 clean:
 	rm *.o
 	rm testD
