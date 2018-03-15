@@ -26,7 +26,9 @@ chopara: cholesky.c cholesky.h choleskyPara.c
 choser: cholesky.c cholesky.h choleskyPara.c
 	gcc -g -o choser -O3 choleskyPara.c cholesky.c cs160validate.c -lm 
 
-cho: chopara choser cholesky.c cholesky.h choleskyPara.c
+cho: algo chopara choser cholesky.c cholesky.h choleskyPara.c
+	gcc -g -o chopara -O3 choleskyPara.c cholesky.c cs160validate.c -lm -fopenmp -lpthread
+	gcc -g -o choser -O3 choleskyPara.c cholesky.c cs160validate.c -lm 
 
 clean:
 	rm *.o
@@ -34,3 +36,5 @@ clean:
 	rm operation
 	rm block
 	rm blockd
+	touch cholesky.c 
+	touch choleskyPara.c

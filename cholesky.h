@@ -2,7 +2,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define uSECtoSEC 1.0E-6
-#define THRESH 1e-14
+#define THRESH 1e-13
 #define SCALE 100.0
 #define TRUE 1
 #define FALSE 0

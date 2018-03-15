@@ -7,6 +7,9 @@
 #include "cs160validate.h"
 #include "cholesky.h"
 
+#define MAXNUM 9
+#define MINNUM 1e-2
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -92,8 +95,7 @@ int validate(double *A, double * L, int N, double thresh)
 			//printf("thresh :%3.20f\n", thresh);
 			if (rdiff > thresh)
 			{
-				printf("Hello\n");
-				printf("(%d,%d):R(i,j):%f,A(i,j):%f (delta: %f)\n",
+				printf("(%d,%d):R(i,j):%5.16f,A(i,j):%5.16f (delta: %5.16e)\n",
 					i,j,R[IDX(i,j,N)],A[IDX(i,j,N)],
 					rdiff);
 
@@ -114,11 +116,6 @@ int validate(double *A, double * L, int N, double thresh)
 */
 void init_array(int N, int trueRandom, double *A) {
 	int i,j,k;
-	struct drand48_data rbuf;
-	if (trueRandom)
-		srand48_r((long int) time(NULL),&rbuf);
-	else
-		srand48_r(1L,&rbuf);
 	
 	double *B = calloc(N * N, sizeof(double));
 
@@ -127,15 +124,27 @@ void init_array(int N, int trueRandom, double *A) {
 	#pragma omp parallel for num_threads(thread_count) schedule (static, 1)
 	for(i = 0; i < N; i++)
 	{
+		int rank = 0;
 #ifdef _OPENMP
-	int rank = omp_get_thread_num();
+	rank = omp_get_thread_num();
 	//printf("Hello from rank %d\n", rank);
 	//printf("Rank %d takes row %d\n", rank, i);
 #endif
+		#pragma omp private(rbuf)
+		struct drand48_data rbuf;
+		if (trueRandom)
+			srand48_r((long int) time(NULL),&rbuf);
+		else
+			srand48_r(1L + rank,&rbuf);
 		for(j = 0; j < N; j++) 
 		{
+			#pragma omp critical
 			drand48_r(&rbuf,&B[IDX(i,j,N)]);
+			if (B[IDX(i,j,N)] == 0)
+				printf("ZERO!\n");
+			B[IDX(i,j,N)] += MINNUM;
 			B[IDX(i,j,N)] *= SCALE;
+			//printf("Rank %d: B(%d, %d): = %6.15f\n", rank, i, j, B[IDX(i,j,N)]);
 		}
 	}
 	printf("done random number generation\n");

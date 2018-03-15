@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	L = (double *)calloc(n*n,sizeof(double));
 	printf("Initializing \n");
 	start = get_clock();
-	init_array(n,0,A);
+	init_array(n,1,A);
 	end = get_clock();
 	total = end - start;
 	time_init = total;
