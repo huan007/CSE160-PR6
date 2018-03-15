@@ -366,7 +366,6 @@ void blockCholeskyInt(int ***A, int*** L, int blockCount, int blockSize)
 
 void blockCholeskyDouble(double ***A, double*** L, int blockCount, int blockSize)
 {
-	printf("blockCholeskyDouble called!\n");
 	sumMatrixDouble(L[IDX(0,0,blockCount)], A[IDX(0,0,blockCount)], blockSize,/*{{{*/
 			blockSize);
 	int i,j;

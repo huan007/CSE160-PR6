@@ -18,7 +18,7 @@ block: algo testBlockInt.c
 	gcc -g -o block testBlockInt.c huanAlgo.o cholesky.c -lm
 
 blockd: algo testBlockDouble.c
-	gcc -g -o blockd testBlockDouble.c huanAlgo.o cholesky.c -lm
+	gcc -g -o blockd testBlockDouble.c huanAlgo.o -lm
 
 clean:
 	rm *.o

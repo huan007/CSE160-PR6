@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "huanAlgo.h"
+#include "cholesky.c"
 
 
 #define MAXNUM 9
@@ -9,6 +10,7 @@
 #define FACTOR 100
 #define THRESH 1e-14
 #define SCALE 100.0
+#define uSECtoSEC 1.0E-6
 //#define GEN_INT() ((rand() % MAXNUM) + MINNUM)
 #define GEN_INT() ((drand48() * FACTOR) + MINNUM)
 #define IDX(i,j,n) ((i*n)+j)
@@ -20,19 +22,17 @@ void usage()
 }
 int main(int argc, char** argv)
 {
-	if (argc < 6)
+	if (argc < 4)
 		usage();
 
-	int M = atoi(argv[1]);
-	int N = atoi(argv[2]);
-	int blockSize = atoi(argv[3]);
-	int blockCount = atoi(argv[4]);
-	int trials = atoi(argv[5]);
+	int N;
+	int blockSize = atoi(argv[1]);
+	int blockCount = atoi(argv[2]);
+	int trials = atoi(argv[3]);
 	int i, j, k, l, m, n;
 	int count = 0;
 
 	N = blockSize * blockCount;
-	M = N;
 	double **Z; 
 	double **X; 
 	double **Y;
@@ -41,13 +41,20 @@ int main(int argc, char** argv)
 	createContiguousArrayDouble(&X, N, N);
 	createContiguousArrayDouble(&Y, N, N);
 	createContiguousArrayDouble(&fullResult, N, N);
+	double time_init = 0;
+	double time_calc = 0;
+	double time_veri = 0;
+	double avg_init, avg_calc, avg_veri;
 
 	srand(1);
 	srand48(1);
+	printf("Start testBlockDouble!\n");
 	for (count = 0; count < trials; count++)
 	{
+		double start, end;
+		double totalTime;
 		printf("Iteration: %d\n", count);
-		printf("Setting up...\n");
+		//printf("Setting up...\n");
 		//Generate randum integers in X;
 		//for (i = 0; i < M; i++)
 		//{
@@ -57,6 +64,7 @@ int main(int argc, char** argv)
 		//	}
 		//}
 
+		start = get_clock();
 		//Generate randum integers in Y;
 		for (i = 0; i < N; i++)
 		{
@@ -71,7 +79,7 @@ int main(int argc, char** argv)
 
 
 		//Multiply out Z
-		multiMatrixDouble(Z, X, Y, M, N, N);
+		multiMatrixDouble(Z, X, Y, N, N, N);
 		//printf("Z:\n");
 		//printInt(&Z, M, N);
 		//printf("upperResult:\n");
@@ -111,8 +119,17 @@ int main(int argc, char** argv)
 		//printDouble(&Z, N, N);
 
 		//printf("Calling blockInt...\n");
-		printf("Calculating...\n");
+		end = get_clock();
+		totalTime = end - start;
+		time_init += totalTime;
+		//printf("*TIME* (Initialization) Time taken: %6.4f\n", totalTime);
+		//printf("Calculating...\n");
+		start = get_clock();
 		blockCholeskyDouble(blockZ, blockResult, blockCount, blockSize);
+		end = get_clock();
+		totalTime = end - start;
+		time_calc += totalTime;
+		//printf("*TIME* (Calculation) Time taken: %6.4f\n", totalTime);
 		blockToFullDouble(blockResult, fullResult, blockCount, blockSize);
 		//blockToFull(blockZ, fullZ, blockCount, blockSize);
 		//printf("fullZ\n");
@@ -121,7 +138,12 @@ int main(int argc, char** argv)
 		//printInt(&fullX, N, N);
 		//printf("fullResult\n");
 		//printDouble(&fullResult, N, N);
+		start = get_clock();
 		int badCount = validate(*Z, *X, N, THRESH); 
+		end = get_clock();
+		totalTime = end - start;
+		time_veri += totalTime;
+		//printf("*TIME* (Verification) Time taken: %6.4f\n", totalTime);
 		printf("Bad Count = %d\n", badCount);
 		if (badCount > 0)
 			exit(-1);
@@ -157,13 +179,15 @@ int main(int argc, char** argv)
 		free(blockZ);
 		free(blockResult);
 	}
-	printf("TEST PASSED!\tM: %d\tN: %d\t trials: %d\n", M, N, trials);
-	printf("Cleaning up\n");
+	printf("TEST PASSED after %d trials\n", trials);
+	printf("*LOG* blockSize: %d\tblockCount: %d\tN: %d", blockSize, blockCount, N);
+	printf("\tInit:\t %6.4f", time_init / trials);
+	printf("\tCalc:\t %6.4f", time_calc / trials);
+	printf("\tVeri:\t %6.4f\n", time_veri / trials);
 	deleteMatrixDouble(Z, N, N);
 	deleteMatrixDouble(X, N, N);
 	deleteMatrixDouble(Y, N, N);
 	deleteMatrixDouble(fullResult, N, N);
-	printf("Done clean up. Now exit\n");
 
 	exit(0);	
 }
