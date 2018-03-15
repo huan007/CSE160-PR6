@@ -125,12 +125,22 @@ void init_array(int N, int trueRandom, double *A) {
 	double *B = calloc(N * N, sizeof(double));
 
 	printf("Random number generation\n");
+#pragma omp parallel for num_threads(thread_count)
 	for(i = 0; i < N; i++)
 	{
 		for(j = 0; j < N; j++) 
 		{
-			drand48_r(&rbuf,&B[IDX(i,j,N)]);
-			B[IDX(i,j,N)] *= SCALE;
+			double number;
+			drand48_r(&rbuf, &number);
+			if (number == 0)
+				printf("ZERO\n");
+			number *= SCALE;
+			//printf("number: %5.12f\n", number);
+			//drand48_r(&rbuf,&B[IDX(i,j,N)]);
+#pragma omp critical
+			B[IDX(i,j,N)] = number;
+			if (B[IDX(i,j,N)] == 0)
+				printf(" B(%d)(%d) ZERO\n", i, j);
 		}
 	}
 	printf("done random number generation\n");
