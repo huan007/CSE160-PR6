@@ -5,15 +5,11 @@
 #include <math.h>
 #include <string.h>
 #include "cs160validate.h"
+#include "cholesky.h"
 
-#define ARGS 2
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define uSECtoSEC 1.0E-6
-#define THRESH 1e-14
-#define SCALE 100.0
-#define TRUE 1
-#define FALSE 0
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // Macro to define index into a linear array for 2D indexing. Stored 
 // row by row.
@@ -127,8 +123,15 @@ void init_array(int N, int trueRandom, double *A) {
 	double *B = calloc(N * N, sizeof(double));
 
 	printf("Random number generation\n");
+	printf("thread_count : %d\n", thread_count);
+	#pragma omp parallel for num_threads(thread_count) schedule (static, 1)
 	for(i = 0; i < N; i++)
 	{
+#ifdef _OPENMP
+	int rank = omp_get_thread_num();
+	//printf("Hello from rank %d\n", rank);
+	//printf("Rank %d takes row %d\n", rank, i);
+#endif
 		for(j = 0; j < N; j++) 
 		{
 			drand48_r(&rbuf,&B[IDX(i,j,N)]);
