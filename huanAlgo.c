@@ -66,7 +66,7 @@ void printDouble(double ***array, double localM, double localN)
 	{
 		for (j = 0; j < localN; j++)
 		{
-			printf("%4.20f\t", (*array)[i][j]);
+			printf("%4.2f\t", (*array)[i][j]);
 		}
 		printf("\n");
 	}
@@ -366,6 +366,7 @@ void blockCholeskyInt(int ***A, int*** L, int blockCount, int blockSize)
 
 void blockCholeskyDouble(double ***A, double*** L, int blockCount, int blockSize)
 {
+	printf("blockCholeskyDouble called!\n");
 	sumMatrixDouble(L[IDX(0,0,blockCount)], A[IDX(0,0,blockCount)], blockSize,/*{{{*/
 			blockSize);
 	int i,j;
@@ -525,14 +526,18 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 	double **A11 = A[IDX(0,0, blockCount)];
 	double **L11 = L[IDX(0,0, blockCount)];
 	//------STEP 1: Calculate top left------
+	//printf("A11\n");
+	//printMatrix(*A11, blockSize);
+	//printf("L11\n");
+	//printMatrix(*L11, blockSize);
 	cholesky(*L11, *A11, blockSize);
-	//printMatrixInt(*L11, blockSize);
+	//printMatrix(*L11, blockSize);
 	//printf("Hello new stack\n");
 	//printf("BlockCount: %d\n", blockCount);
 	//printf("A11:\n");
-	//printInt(&A11, blockSize, blockSize);
+	//printDouble(&A11, blockSize, blockSize);
 	//printf("L11:\n");
-	//printInt(&L11, blockSize, blockSize);
+	//printDouble(&L11, blockSize, blockSize);
 
 	//Inverting L11, we will need it to solve L panel
 	for (i = 0; i < blockSize; i++)
@@ -713,6 +718,52 @@ void blockToFull(int ***block, int **full, int blockCount, int blockSize)
 }
 
 void fullToBlock(int ***block, int **full, int blockCount, int blockSize)
+{
+	int blockRow, blockCol, globalRow, globalCol;/*{{{*/
+	for (blockRow = 0; blockRow < blockCount; blockRow++)
+	{
+		for (blockCol = 0; blockCol < blockCount; blockCol++)
+		{
+			//Offset added to match position in global array
+			int offsetRow = blockRow * blockSize;
+			int offsetCol = blockCol * blockSize;
+
+			for (globalRow = 0; globalRow < blockSize; globalRow++)
+			{
+				for (globalCol = 0; globalCol < blockSize; globalCol++)
+				{
+					block[IDX(blockRow, blockCol, blockCount)][globalRow][globalCol] = 
+						full[globalRow+offsetRow][globalCol+offsetCol];
+				}
+			}
+		}
+	}/*}}}*/
+}
+
+void blockToFullDouble(double ***block, double **full, int blockCount, int blockSize)
+{
+	int blockRow, blockCol, globalRow, globalCol;/*{{{*/
+	for (blockRow = 0; blockRow < blockCount; blockRow++)
+	{
+		for (blockCol = 0; blockCol < blockCount; blockCol++)
+		{
+			//Offset added to match position in global array
+			int offsetRow = blockRow * blockSize;
+			int offsetCol = blockCol * blockSize;
+
+			for (globalRow = 0; globalRow < blockSize; globalRow++)
+			{
+				for (globalCol = 0; globalCol < blockSize; globalCol++)
+				{
+					full[globalRow+offsetRow][globalCol+offsetCol] = 
+						block[IDX(blockRow, blockCol, blockCount)][globalRow][globalCol];
+				}
+			}
+		}
+	}/*}}}*/
+}
+
+void fullToBlockDouble(double ***block, double **full, int blockCount, int blockSize)
 {
 	int blockRow, blockCol, globalRow, globalCol;/*{{{*/
 	for (blockRow = 0; blockRow < blockCount; blockRow++)

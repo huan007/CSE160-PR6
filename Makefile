@@ -15,7 +15,7 @@ operation: algo testOperationInt.c
 	gcc -g -o operation testOperationInt.c huanAlgo.o -lm
 
 block: algo testBlockInt.c
-	gcc -g -o block testBlockInt.c huanAlgo.o -lm
+	gcc -g -o block testBlockInt.c huanAlgo.o cholesky.c -lm
 
 blockd: algo testBlockDouble.c
 	gcc -g -o blockd testBlockDouble.c huanAlgo.o cholesky.c -lm
@@ -24,3 +24,5 @@ clean:
 	rm *.o
 	rm testD
 	rm operation
+	rm block
+	rm blockd

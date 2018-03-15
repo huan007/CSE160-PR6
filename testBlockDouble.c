@@ -6,7 +6,11 @@
 
 #define MAXNUM 9
 #define MINNUM 1
-#define GEN_INT() ((rand() % MAXNUM) + MINNUM)
+#define FACTOR 100
+#define THRESH 1e-14
+#define SCALE 100.0
+//#define GEN_INT() ((rand() % MAXNUM) + MINNUM)
+#define GEN_INT() ((drand48() * FACTOR) + MINNUM)
 #define IDX(i,j,n) ((i*n)+j)
 
 void usage()
@@ -29,16 +33,17 @@ int main(int argc, char** argv)
 
 	N = blockSize * blockCount;
 	M = N;
-	int **Z; 
-	int **X; 
-	int **Y;
-	int **fullResult;
-	createContiguousArrayInt(&Z, N, N);
-	createContiguousArrayInt(&X, N, N);
-	createContiguousArrayInt(&Y, N, N);
-	createContiguousArrayInt(&fullResult, N, N);
+	double **Z; 
+	double **X; 
+	double **Y;
+	double **fullResult;
+	createContiguousArrayDouble(&Z, N, N);
+	createContiguousArrayDouble(&X, N, N);
+	createContiguousArrayDouble(&Y, N, N);
+	createContiguousArrayDouble(&fullResult, N, N);
 
 	srand(1);
+	srand48(1);
 	for (count = 0; count < trials; count++)
 	{
 		printf("Iteration: %d\n", count);
@@ -57,7 +62,7 @@ int main(int argc, char** argv)
 		{
 			for(j = 0; j < i + 1; j++)
 			{
-				int temp = GEN_INT();
+				double temp = GEN_INT();
 				Y[j][i] = temp;
 				X[i][j] = temp;
 			}
@@ -66,29 +71,30 @@ int main(int argc, char** argv)
 
 
 		//Multiply out Z
-		multiMatrixInt(Z, X, Y, M, N, N);
+		multiMatrixDouble(Z, X, Y, M, N, N);
 		//printf("Z:\n");
 		//printInt(&Z, M, N);
 		//printf("upperResult:\n");
 		//printInt(&upperResult, M, N);
 		//int ***blockX = malloc(blockCount * blockCount * sizeof(int**));
 		//int ***blockY = malloc(blockCount * blockCount * sizeof(int**));
-		int ***blockZ = malloc(blockCount * blockCount * sizeof(int**));
-		int ***blockResult = malloc(blockCount * blockCount * sizeof(int**));
+		double ***blockZ = malloc(blockCount * blockCount * sizeof(double**));
+		double ***blockResult = malloc(blockCount * blockCount * sizeof(double**));
+		//Allocating blocks
 		for (i = 0; i < blockCount; i++)
 		{
 			for (j = 0; j < blockCount; j++)
 			{
 				//createContiguousArrayInt(&(blockX[IDX(i,j,blockCount)]), blockSize, blockSize);
 				//createContiguousArrayInt(&(blockY[IDX(i,j,blockCount)]), blockSize, blockSize);
-				createContiguousArrayInt(&(blockZ[IDX(i,j,blockCount)]), blockSize, blockSize);
-				createContiguousArrayInt(&(blockResult[IDX(i,j,blockCount)]), blockSize, blockSize);
+				createContiguousArrayDouble(&(blockZ[IDX(i,j,blockCount)]), blockSize, blockSize);
+				createContiguousArrayDouble(&(blockResult[IDX(i,j,blockCount)]), blockSize, blockSize);
 			}
 		}
 
 		//fullToBlock(blockX, X, blockCount, blockSize);
 		//fullToBlock(blockY, Y, blockCount, blockSize);
-		fullToBlock(blockZ, Z, blockCount, blockSize);
+		fullToBlockDouble(blockZ, Z, blockCount, blockSize);
 		//fullToBlock(blockResult, fullResult, blockCount, blockSize);
 
 		//printf("Converting block to full...\n");
@@ -96,61 +102,68 @@ int main(int argc, char** argv)
 		//blockToFull(blockY, fullY, blockCount, blockSize);
 		//blockToFull(blockZ, fullZ, blockCount, blockSize);
 		//blockToFull(blockResult, fullResult, blockCount, blockSize);
-		printf("fullX\n");
-		printInt(&X, N, N);
-		printf("fullY\n");
-		printInt(&Y, N, N);
-		printf("fullZ\n");
-		printInt(&Z, N, N);
+		//printf("fullX\n");
+		//printInt(&fullX, N, N);
+		//printf("fullY\n");
+		//printInt(&fullY, N, N);
+		
+		//printf("fullZ\n");
+		//printDouble(&Z, N, N);
 
 		//printf("Calling blockInt...\n");
 		printf("Calculating...\n");
-		blockCholeskyInt(blockZ, blockResult, blockCount, blockSize);
-		blockToFull(blockResult, fullResult, blockCount, blockSize);
+		blockCholeskyDouble(blockZ, blockResult, blockCount, blockSize);
+		blockToFullDouble(blockResult, fullResult, blockCount, blockSize);
 		//blockToFull(blockZ, fullZ, blockCount, blockSize);
 		//printf("fullZ\n");
 		//printInt(&fullZ, N, N);
 		//printf("fullX\n");
 		//printInt(&fullX, N, N);
 		//printf("fullResult\n");
-		//printInt(&fullResult, N, N);
+		//printDouble(&fullResult, N, N);
+		int badCount = validate(*Z, *X, N, THRESH); 
+		printf("Bad Count = %d\n", badCount);
+		if (badCount > 0)
+			exit(-1);
 
 		//Validation
-		printf("Validating...\n");
-		for (i = 0; i < M; i++)
-		{
-			for (j = 0; j < N; j++)
-			{
-				if (X[i][j] != fullResult[i][j])
-				{
-					printf("ERROR: Result is different\n");
-					printf("X:\n");
-					printInt(&X, M, N);
-					printf("Y:\n");
-					printInt(&Y, N, N);
-					printf("Z:\n");
-					printInt(&Z, M, N);
-					exit(-1);
-				}
-			}
-		}
+		//printf("Validating...\n");
+		//for (i = 0; i < M; i++)
+		//{
+		//	for (j = 0; j < N; j++)
+		//	{
+		//		if (X[i][j] != fullResult[i][j])
+		//		{
+		//			printf("ERROR: Result is different\n");
+		//			printf("X:\n");
+		//			printDouble(&X, M, N);
+		//			printf("Y:\n");
+		//			printDouble(&Y, N, N);
+		//			printf("Z:\n");
+		//			printDouble(&Z, M, N);
+		//			exit(-1);
+		//		}
+		//	}
+		//}
 
 		for (i = 0; i < blockCount; i++)
 		{
 			for (j = 0; j < blockCount; j++)
 			{
-				deleteMatrixInt(blockZ[IDX(i,j,blockCount)], blockSize, blockSize);
-				deleteMatrixInt(blockResult[IDX(i,j,blockCount)], blockSize, blockSize);
+				deleteMatrixDouble(blockZ[IDX(i,j,blockCount)], blockSize, blockSize);
+				deleteMatrixDouble(blockResult[IDX(i,j,blockCount)], blockSize, blockSize);
 			}
 		}
 		free(blockZ);
 		free(blockResult);
 	}
 	printf("TEST PASSED!\tM: %d\tN: %d\t trials: %d\n", M, N, trials);
-	deleteMatrixInt(Z, N, N);
-	deleteMatrixInt(X, N, N);
-	deleteMatrixInt(Y, N, N);
-	deleteMatrixInt(fullResult, N, N);
+	printf("Cleaning up\n");
+	deleteMatrixDouble(Z, N, N);
+	deleteMatrixDouble(X, N, N);
+	deleteMatrixDouble(Y, N, N);
+	deleteMatrixDouble(fullResult, N, N);
+	printf("Done clean up. Now exit\n");
 
-	
+	exit(0);	
 }
