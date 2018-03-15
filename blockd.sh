@@ -1,2 +1,2 @@
-#! /bin/bash
-./blockd $1 $2 5 &> ./bSingle/bSingle-$1-$2
+#! /bin/sh
+./blockd $1 $2 2 &> ./bSingle/bSingle-$1-$2
