@@ -49,6 +49,8 @@ int multT(double *result, double *A, int N, int lowerT)
 	bzero(result, N*N*sizeof(double));
 	printf("Thread count: %d\n", thread_count);
 	int chunk = ceil(N/(thread_count*32));
+	if (chunk == 0)
+		chunk = 1;
 #pragma omp parallel for num_threads(thread_count) schedule (dynamic, chunk) \
 	private (i,j,k)
 	for(i = 0; i < N; i++)
@@ -96,6 +98,8 @@ int validate(double *A, double * L, int N, double thresh)
 	int i,j;
 	double rdiff; /* relative difference */
 	int chunk = ceil(N/(thread_count*32));
+	if (chunk == 0)
+		chunk = 1;
 #pragma omp parallel for num_threads(thread_count) schedule (static, chunk) \
 	private (i,j,rdiff) shared(badcount)
 	for (i = 0 ; i < N; i++)
@@ -104,6 +108,8 @@ int validate(double *A, double * L, int N, double thresh)
 		{
 			if (A[IDX(i,j,N)] == 0)
 				printf("Validate: ZERO\n");
+			if (isnan(-A[IDX(i,j,N)]))
+				printf("Validate: NaN!\n");
 			rdiff = fabs((R[IDX(i,j,N)] - A[IDX(i,j,N)])/A[IDX(i,j,N)]);
 			//printf("R: %3.20f\n", R[IDX(i,j,N)]);
 			//printf("A: %3.20f\n", A[IDX(i,j,N)]);
@@ -191,6 +197,8 @@ void cholesky(double *L, double *A, int N)
 	bzero(L,N*N*sizeof(double));
 	double temp;
 	int chunk = ceil(N/(thread_count*32));
+	if (chunk == 0)
+		chunk = 1;
 #pragma omp parallel for num_threads(thread_count) schedule (dynamic, chunk) \
 	private(i,j,k,temp)
 	for (i = 0; i < N; i++){
