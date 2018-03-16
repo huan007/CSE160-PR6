@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 	else
 		printf("solution is invalid, %d elements above threshold\n",badcount);
 	cs160validate(A,L,n,THRESH);
-	printf("*LOG* \tN: %d", n);
+	printf("*LOG* \tThread: %d\tN: %d", thread_count, n);
 	printf("\tInit:\t %6.4f", time_init);
 	printf("\tCalc:\t %6.4f", time_calc);
 	printf("\tVeri:\t %6.4f\n", time_veri);
