@@ -47,11 +47,19 @@ int multT(double *result, double *A, int N, int lowerT)
 {
 	int i,j,k;
 	bzero(result, N*N*sizeof(double));
+	printf("Thread count: %d\n", thread_count);
+	int chunk = ceil(N/(thread_count*32));
+#pragma omp parallel for num_threads(thread_count) schedule (dynamic, chunk) \
+	private (i,j,k)
 	for(i = 0; i < N; i++)
 	{
+		#ifdef _OPENMP
+		//printf("Hello from thread %d\n", omp_get_thread_num());
+		#endif
 		/* Result is symmetric, just compute upper triangle */
 		for(j = i; j < N; j++) 
 		{
+#pragma omp private (sum)
 			double sum = 0.0;
 			//printf("Start sum [%d][%d]\n", i, j);
 			/* if A is lower Triangular don't multiply zeroes */
@@ -60,8 +68,11 @@ int multT(double *result, double *A, int N, int lowerT)
 				//printf("%3.6f\t %3.6f\n", A[IDX(i,k,N)], A[IDX(j,k,N)]);
 				sum += A[IDX(i,k,N)] * A[IDX(j,k,N)];
 			}
+#pragma omp critical
+			{
 			result[IDX(i,j,N)] = sum;
 			result[IDX(j,i,N)] = sum; /*enforce symmetry */
+			}
 		}
 		//printf("Outside\n");
 	}
@@ -84,6 +95,9 @@ int validate(double *A, double * L, int N, double thresh)
 	int badcount = 0;
 	int i,j;
 	double rdiff; /* relative difference */
+	int chunk = ceil(N/(thread_count*32));
+#pragma omp parallel for num_threads(thread_count) schedule (static, chunk) \
+	private (i,j,rdiff) shared(badcount)
 	for (i = 0 ; i < N; i++)
 	{
 		for(j = 0; j < N; j ++)
@@ -96,6 +110,7 @@ int validate(double *A, double * L, int N, double thresh)
 			//printf("rdiff :%3.20f\n", rdiff);
 			//printf("thresh :%3.20f\n", thresh);
 			if (rdiff > thresh)
+#pragma omp critical
 			{
 				printf("(%d,%d):R(i,j):%5.16f,A(i,j):%5.16f (delta: %5.16e)\n",
 					i,j,R[IDX(i,j,N)],A[IDX(i,j,N)],
@@ -157,7 +172,11 @@ void init_array(int N, int trueRandom, double *A) {
 	//printMatrix(B,N);
 
 	/* Compute B*B^T to get symmetric, positive definite */
+	start = get_clock();
 	multT(A,B,N,0);
+	end = get_clock();
+	total = end - start;
+	printf("Time taken to multiply matrix: %5.4f\n", total);
 	free (B);
 }
 

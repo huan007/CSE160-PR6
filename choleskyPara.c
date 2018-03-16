@@ -31,8 +31,10 @@ int main(int argc, char* argv[]) {
 	n = atoi(argv[1]);
 #ifdef _OPENMP
 	thread_count = atoi(argv[2]);
+	printf("Cholesky Serial Multi-Threaded\n");
 #else
 	thread_count = 1;
+	printf("Cholesky Serial Single Threaded\n");
 #endif
 	A = (double *)malloc(n*n*sizeof(double));
 	L = (double *)calloc(n*n,sizeof(double));
