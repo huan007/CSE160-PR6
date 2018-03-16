@@ -88,6 +88,8 @@ int validate(double *A, double * L, int N, double thresh)
 	{
 		for(j = 0; j < N; j ++)
 		{
+			if (A[IDX(i,j,N)] == 0)
+				printf("Validate: ZERO\n");
 			rdiff = fabs((R[IDX(i,j,N)] - A[IDX(i,j,N)])/A[IDX(i,j,N)]);
 			//printf("R: %3.20f\n", R[IDX(i,j,N)]);
 			//printf("A: %3.20f\n", A[IDX(i,j,N)]);
@@ -116,6 +118,7 @@ int validate(double *A, double * L, int N, double thresh)
 */
 void init_array(int N, int trueRandom, double *A) {
 	int i,j,k;
+	double start, end, total;
 	struct drand48_data rbuf;
 	if (trueRandom)
 		srand48_r((long int) time(NULL),&rbuf);
@@ -125,25 +128,32 @@ void init_array(int N, int trueRandom, double *A) {
 	double *B = calloc(N * N, sizeof(double));
 
 	printf("Random number generation\n");
-#pragma omp parallel for num_threads(thread_count)
+	start = get_clock();
+#pragma omp parallel for num_threads(thread_count) private(i,j)
 	for(i = 0; i < N; i++)
 	{
+#pragma omp private (localBuf)
+		double *localBuf = malloc(N * sizeof(double));
 		for(j = 0; j < N; j++) 
 		{
-			double number;
-			drand48_r(&rbuf, &number);
-			if (number == 0)
+			drand48_r(&rbuf, &(localBuf[j]));
+			if (localBuf[j] == 0)
 				printf("ZERO\n");
-			number *= SCALE;
+			localBuf[j] *= SCALE;
 			//printf("number: %5.12f\n", number);
 			//drand48_r(&rbuf,&B[IDX(i,j,N)]);
-#pragma omp critical
-			B[IDX(i,j,N)] = number;
-			if (B[IDX(i,j,N)] == 0)
-				printf(" B(%d)(%d) ZERO\n", i, j);
+			//printf("B(%d)(%d): %5.12f\n", i, j, B[IDX(i,j,N)]);
+			//if (B[IDX(i,j,N)] == 0)
+			//	printf(" B(%d)(%d) ZERO\n", i, j);
 		}
+#pragma omp critical
+		memcpy(&(B[IDX(i,0,N)]), localBuf, N * sizeof(double));
+		free(localBuf);
 	}
 	printf("done random number generation\n");
+	end = get_clock();
+	total = end - start;
+	printf("Time taken to generate randoms: %5.4f\n", total);
 	//printMatrix(B,N);
 
 	/* Compute B*B^T to get symmetric, positive definite */
