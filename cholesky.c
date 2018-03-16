@@ -190,16 +190,22 @@ void cholesky(double *L, double *A, int N)
 	int i,j,k;
 	bzero(L,N*N*sizeof(double));
 	double temp;
+	int chunk = ceil(N/(thread_count*32));
+#pragma omp parallel for num_threads(thread_count) schedule (dynamic, chunk) \
+	private(i,j,k,temp)
 	for (i = 0; i < N; i++){
 		for (j = 0; j < (i+1); j++) {
 			temp = 0;
 			/* Inner product of ith row of L, jth row of L */
 			for (k = 0; k < j; k++)
 				temp += L[IDX(i,k,N)] * L[IDX(j,k,N)];
+#pragma omp critical
+			{
 			if (i == j)
 				L[IDX(i,j,N)] = sqrt(A[IDX(i,i,N)] - temp);
 			else {
 				L[IDX(i,j,N)] = (A[IDX(i,j,N)] - temp)/ L[IDX(j,j,N)];
+			}
 			}
 		  }
 	}
