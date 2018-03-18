@@ -20,11 +20,12 @@
 
 void usage()
 {
-	printf("usage: testAlgo <M> <N> <size> <count> <trials>\n");
+	printf("usage: blockd <size> <count> <thread>\n");
 	exit(-1);
 }
 int main(int argc, char** argv)
 {
+	printf("# of arguments: %d\n", argc);
 	if (argc < 4)
 		usage();
 
@@ -203,9 +204,9 @@ int main(int argc, char** argv)
 	printf("\tInit:\t %6.4f", time_init / trials);
 	printf("\tCalc:\t %6.4f", time_calc / trials);
 	printf("\tVeri:\t %6.4f\n", time_veri / trials);
-	deleteMatrixDouble(Z, N, N);
-	deleteMatrixDouble(X, N, N);
-	deleteMatrixDouble(Y, N, N);
+	//deleteMatrixDouble(Z, N, N);
+	//deleteMatrixDouble(X, N, N);
+	//deleteMatrixDouble(Y, N, N);
 	deleteMatrixDouble(A, N, N);
 	deleteMatrixDouble(fullResult, N, N);
 
