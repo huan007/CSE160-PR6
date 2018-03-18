@@ -3,9 +3,15 @@
 #include <math.h>
 #include <string.h>
 #include "huanAlgo.h"
+#include "cholesky.h"
 
 #define IDX(i,j,n) ((i*n)+j)
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
+double time_L21;
+double time_L22;
 
 void createContiguousArrayDouble(double ***u, int localM, int localN)
 {
@@ -366,6 +372,8 @@ void blockCholeskyInt(int ***A, int*** L, int blockCount, int blockSize)
 
 void blockCholeskyDouble(double ***A, double*** L, int blockCount, int blockSize)
 {
+	//Reset timer
+	time_L21 = 0;
 	sumMatrixDouble(L[IDX(0,0,blockCount)], A[IDX(0,0,blockCount)], blockSize,/*{{{*/
 			blockSize);
 	int i,j;
@@ -392,6 +400,7 @@ void blockCholeskyDouble(double ***A, double*** L, int blockCount, int blockSize
 		}
 	}
 	free(newA);
+	printf("Total time taken to computer all the L21: %6.4f\n", time_L21);
 	/*}}}*/
 }
 
@@ -553,15 +562,26 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 		
 	//printf("LT11\n");
 	//printInt(&LT11, blockSize, blockSize);
+	double start = get_clock();
 	//------STEP 2: Calculate L panel-------
+#pragma omp parallel for num_threads(thread_count) schedule (static, 5) \
+	private(i)
 	for (i = 1; i < blockCount; i++)
 	{
+#ifdef _OPENMP
+		printf("Hello from thread %d\n", omp_get_thread_num());
+		printf("(%d) A[] = %d \t L[] = %d\n", omp_get_thread_num(), *A[IDX(i,0,blockCount)], *L[IDX(i,0,blockCount)]);
+#endif
 		computeMatrixDouble(A[IDX(i, 0, blockCount)], L[IDX(i, 0, blockCount)], 
 			LT11, blockSize, blockSize);
 		//printInt(&(A[IDX(i,0, blockCount)]), blockSize, blockSize);
 		//printf("L21[%d]\n", i);
 		//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 	}
+	printf("Done parallel L21\n");
+	double stop = get_clock();
+	double total = stop - start;
+	time_L21 += total;
 	//------STEP 3: Update A22-------------
 	//printf("Update...\n");
 	for (i = 1; i < blockCount; i++)
