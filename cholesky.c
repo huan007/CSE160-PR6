@@ -111,8 +111,8 @@ int validate(double *A, double * L, int N, double thresh)
 			if (isnan(-A[IDX(i,j,N)]))
 				printf("Validate: NaN!\n");
 			rdiff = fabs((R[IDX(i,j,N)] - A[IDX(i,j,N)])/A[IDX(i,j,N)]);
-			//printf("R: %3.20f\n", R[IDX(i,j,N)]);
-			//printf("A: %3.20f\n", A[IDX(i,j,N)]);
+			//printf("R[%d][%d]: %3.20f\n", i,j,R[IDX(i,j,N)]);
+			//printf("A[%d][%d]: %3.20f\n", i,j,A[IDX(i,j,N)]);
 			//printf("rdiff :%3.20f\n", rdiff);
 			//printf("thresh :%3.20f\n", thresh);
 			if (rdiff > thresh)
@@ -121,6 +121,10 @@ int validate(double *A, double * L, int N, double thresh)
 				printf("(%d,%d):R(i,j):%5.16f,A(i,j):%5.16f (delta: %5.16e)\n",
 					i,j,R[IDX(i,j,N)],A[IDX(i,j,N)],
 					rdiff);
+				printf("R[%d][%d]: %3.20f\n", i,j,R[IDX(i,j,N)]);
+				printf("A[%d][%d]: %3.20f\n", i,j,A[IDX(i,j,N)]);
+				printf("rdiff :%3.20f\n", rdiff);
+				printf("thresh :%3.20f\n", thresh);
 
 				badcount++; 
 			}
@@ -150,10 +154,8 @@ void init_array(int N, int trueRandom, double *A) {
 
 	printf("Random number generation\n");
 	start = get_clock();
-#pragma omp parallel for num_threads(thread_count) private(i,j)
 	for(i = 0; i < N; i++)
 	{
-#pragma omp private (localBuf)
 		double *localBuf = malloc(N * sizeof(double));
 		for(j = 0; j < N; j++) 
 		{
@@ -167,7 +169,6 @@ void init_array(int N, int trueRandom, double *A) {
 			//if (B[IDX(i,j,N)] == 0)
 			//	printf(" B(%d)(%d) ZERO\n", i, j);
 		}
-#pragma omp critical
 		memcpy(&(B[IDX(i,0,N)]), localBuf, N * sizeof(double));
 		free(localBuf);
 	}
@@ -220,6 +221,34 @@ void cholesky(double *L, double *A, int N)
 
 }
 
+/* Compute the Cholesky Decomposition of A 
+ * L - NxN result matrix, Lower Triangular L*L^T = A
+ * A - NxN symmetric, positive definite matrix A
+ * N - size of matrices;
+ */
+void choleskySingle(double *L, double *A, int N)
+{
+	int i,j,k;
+	bzero(L,N*N*sizeof(double));
+	double temp;
+	int chunk = ceil(N/(thread_count*32));
+	if (chunk == 0)
+		chunk = 1;
+	for (i = 0; i < N; i++){
+		for (j = 0; j < (i+1); j++) {
+			temp = 0;
+			/* Inner product of ith row of L, jth row of L */
+			for (k = 0; k < j; k++)
+				temp += L[IDX(i,k,N)] * L[IDX(j,k,N)];
+			if (i == j)
+				L[IDX(i,j,N)] = sqrt(A[IDX(i,i,N)] - temp);
+			else {
+				L[IDX(i,j,N)] = (A[IDX(i,j,N)] - temp)/ L[IDX(j,j,N)];
+			}
+		  }
+	}
+
+}
 
 //int main(int argc, char* argv[]) {
 //

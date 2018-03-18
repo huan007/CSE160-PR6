@@ -2,13 +2,16 @@
 #include <time.h>
 #include <stdio.h>
 #include "huanAlgo.h"
-#include "cholesky.c"
+#include "cholesky.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #define MAXNUM 9
-#define MINNUM 1
-#define FACTOR 100
-#define THRESH 1e-14
+#define MINNUM 1995
+#define FACTOR 2000
+#define THRESH 1e-13
 #define SCALE 100.0
 #define uSECtoSEC 1.0E-6
 //#define GEN_INT() ((rand() % MAXNUM) + MINNUM)
@@ -28,7 +31,12 @@ int main(int argc, char** argv)
 	int N;
 	int blockSize = atoi(argv[1]);
 	int blockCount = atoi(argv[2]);
-	int trials = atoi(argv[3]);
+	int trials = 1;
+#ifdef _OPENMP
+	thread_count = atoi(argv[3]);
+#else
+	thread_count = 1;
+#endif
 	int i, j, k, l, m, n;
 	int count = 0;
 
@@ -37,18 +45,20 @@ int main(int argc, char** argv)
 	double **X; 
 	double **Y;
 	double **fullResult;
-	createContiguousArrayDouble(&Z, N, N);
-	createContiguousArrayDouble(&X, N, N);
-	createContiguousArrayDouble(&Y, N, N);
+	//createContiguousArrayDouble(&Z, N, N);
+	//createContiguousArrayDouble(&X, N, N);
+	//createContiguousArrayDouble(&Y, N, N);
 	createContiguousArrayDouble(&fullResult, N, N);
 	double time_init = 0;
 	double time_calc = 0;
 	double time_veri = 0;
 	double avg_init, avg_calc, avg_veri;
+	double **A;
+	createContiguousArrayDouble(&A, N, N);
 
 	srand(1);
-	srand48(1);
-	printf("Start testBlockDouble!\n");
+	srand48(time(NULL));
+	printf("Start testBlockDouble SIDAAA!\n");
 	for (count = 0; count < trials; count++)
 	{
 		double start, end;
@@ -66,27 +76,31 @@ int main(int argc, char** argv)
 
 		start = get_clock();
 		//Generate randum integers in Y;
-		for (i = 0; i < N; i++)
-		{
-			for(j = 0; j < i + 1; j++)
-			{
-				double temp = GEN_INT();
-				Y[j][i] = temp;
-				X[i][j] = temp;
-			}
-		}
-
-
+		//for (i = 0; i < N; i++)
+		//{
+		//	for(j = 0; j < i + 1; j++)
+		//	{
+		//		double temp = GEN_INT();
+		//		Y[j][i] = temp;
+		//		X[i][j] = temp;
+		//	}
+		//}
 
 		//Multiply out Z
-		multiMatrixDouble(Z, X, Y, N, N, N);
+		//multiMatrixDouble(Z, X, Y, N, N, N);
 		//printf("Z:\n");
 		//printInt(&Z, M, N);
+		init_array(N,1,*A);
+		//printf("A\n");
+		////printMatrix(A, N);
+		//printDouble(&A, N, N);
 		//printf("upperResult:\n");
 		//printInt(&upperResult, M, N);
 		//int ***blockX = malloc(blockCount * blockCount * sizeof(int**));
 		//int ***blockY = malloc(blockCount * blockCount * sizeof(int**));
-		double ***blockZ = malloc(blockCount * blockCount * sizeof(double**));
+		printf("Allocating block variables\n");
+		//double ***blockZ = malloc(blockCount * blockCount * sizeof(double**));
+		double ***blockA = malloc(blockCount * blockCount * sizeof(double**));
 		double ***blockResult = malloc(blockCount * blockCount * sizeof(double**));
 		//Allocating blocks
 		for (i = 0; i < blockCount; i++)
@@ -95,14 +109,15 @@ int main(int argc, char** argv)
 			{
 				//createContiguousArrayInt(&(blockX[IDX(i,j,blockCount)]), blockSize, blockSize);
 				//createContiguousArrayInt(&(blockY[IDX(i,j,blockCount)]), blockSize, blockSize);
-				createContiguousArrayDouble(&(blockZ[IDX(i,j,blockCount)]), blockSize, blockSize);
+				//createContiguousArrayDouble(&(blockZ[IDX(i,j,blockCount)]), blockSize, blockSize);
+				createContiguousArrayDouble(&(blockA[IDX(i,j,blockCount)]), blockSize, blockSize);
 				createContiguousArrayDouble(&(blockResult[IDX(i,j,blockCount)]), blockSize, blockSize);
 			}
 		}
 
-		//fullToBlock(blockX, X, blockCount, blockSize);
-		//fullToBlock(blockY, Y, blockCount, blockSize);
-		fullToBlockDouble(blockZ, Z, blockCount, blockSize);
+		printf("Converting full to block\n");
+		//fullToBlockDouble(blockZ, Z, blockCount, blockSize);
+		fullToBlockDouble(blockA, A, blockCount, blockSize);
 		//fullToBlock(blockResult, fullResult, blockCount, blockSize);
 
 		//printf("Converting block to full...\n");
@@ -122,15 +137,22 @@ int main(int argc, char** argv)
 		end = get_clock();
 		totalTime = end - start;
 		time_init += totalTime;
-		//printf("*TIME* (Initialization) Time taken: %6.4f\n", totalTime);
-		//printf("Calculating...\n");
+
+		//Cholesky using serial algorith
+		//double *L = (double *)malloc(N*N *sizeof(double));
+		//choleskySingle(L, *A, N);
+		//printf("L (serial cholesky)\n");
+		//printMatrix(L, N);
+
+		printf("Calling blockCholesky\n");
 		start = get_clock();
-		blockCholeskyDouble(blockZ, blockResult, blockCount, blockSize);
+		blockCholeskyDouble(blockA, blockResult, blockCount, blockSize);
 		end = get_clock();
 		totalTime = end - start;
 		time_calc += totalTime;
 		//printf("*TIME* (Calculation) Time taken: %6.4f\n", totalTime);
 		blockToFullDouble(blockResult, fullResult, blockCount, blockSize);
+
 		//blockToFull(blockZ, fullZ, blockCount, blockSize);
 		//printf("fullZ\n");
 		//printInt(&fullZ, N, N);
@@ -139,31 +161,28 @@ int main(int argc, char** argv)
 		//printf("fullResult\n");
 		//printDouble(&fullResult, N, N);
 		start = get_clock();
-		int badCount = validate(*Z, *X, N, THRESH); 
+		int badCount = validate(*A, *fullResult, N, THRESH); 
 		end = get_clock();
 		totalTime = end - start;
 		time_veri += totalTime;
 		//printf("*TIME* (Verification) Time taken: %6.4f\n", totalTime);
 		printf("Bad Count = %d\n", badCount);
-		if (badCount > 0)
-			exit(-1);
+		//if (badCount > 0)
+		//	exit(-1);
 
 		//Validation
 		//printf("Validating...\n");
-		//for (i = 0; i < M; i++)
+		//for (i = 0; i < N; i++)
 		//{
-		//	for (j = 0; j < N; j++)
+		//	for (j = 0; j < i+1; j++)
 		//	{
-		//		if (X[i][j] != fullResult[i][j])
+		//		double err = abs(X[i][j] - fullResult[i][j]) / X[i][j];
+		//		if (err > THRESH)
 		//		{
 		//			printf("ERROR: Result is different\n");
-		//			printf("X:\n");
-		//			printDouble(&X, M, N);
-		//			printf("Y:\n");
-		//			printDouble(&Y, N, N);
-		//			printf("Z:\n");
-		//			printDouble(&Z, M, N);
-		//			exit(-1);
+		//			printf("X[%d][%d] = \t\t%5.16f\n", i,j,X[i][j]);
+		//			printf("result[%d][%d] = \t%5.16f\n", i,j,fullResult[i][j]);
+		//			printf("Error: %5.16e\n", err);
 		//		}
 		//	}
 		//}
@@ -172,11 +191,11 @@ int main(int argc, char** argv)
 		{
 			for (j = 0; j < blockCount; j++)
 			{
-				deleteMatrixDouble(blockZ[IDX(i,j,blockCount)], blockSize, blockSize);
+				deleteMatrixDouble(blockA[IDX(i,j,blockCount)], blockSize, blockSize);
 				deleteMatrixDouble(blockResult[IDX(i,j,blockCount)], blockSize, blockSize);
 			}
 		}
-		free(blockZ);
+		free(blockA);
 		free(blockResult);
 	}
 	printf("TEST PASSED after %d trials\n", trials);
@@ -187,6 +206,7 @@ int main(int argc, char** argv)
 	deleteMatrixDouble(Z, N, N);
 	deleteMatrixDouble(X, N, N);
 	deleteMatrixDouble(Y, N, N);
+	deleteMatrixDouble(A, N, N);
 	deleteMatrixDouble(fullResult, N, N);
 
 	exit(0);	

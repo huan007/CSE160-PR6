@@ -18,7 +18,7 @@ block: algo testBlockInt.c
 	gcc -g -o block testBlockInt.c huanAlgo.o cholesky.c -lm
 
 blockd: algo testBlockDouble.c
-	gcc -g -o blockd testBlockDouble.c huanAlgo.o -lm
+	gcc -g -o blockd testBlockDouble.c huanAlgo.o cholesky.c -lm -lpthread -fopenmp
 
 chopara: cholesky.c cholesky.h choleskyPara.c
 	gcc -g -o chopara -O3 choleskyPara.c cholesky.c cs160validate.c -lm -fopenmp -lpthread

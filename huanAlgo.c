@@ -432,6 +432,7 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 		
 	//printf("LT11\n");
 	//printInt(&LT11, blockSize, blockSize);
+	printf("calculating A21\n");
 	//------STEP 2: Calculate L panel-------
 	for (i = 1; i < blockCount; i++)
 	{
@@ -441,6 +442,7 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 		//printf("L21[%d]\n", i);
 		//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 	}
+	printf("Updating A22\n");
 	//------STEP 3: Update A22-------------
 	//printf("Update...\n");
 	for (i = 1; i < blockCount; i++)
@@ -453,6 +455,8 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 			//Calculate L21 * LT21
 			multiMatrixLowerTransInt(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
 				blockSize, blockSize, blockSize);
+			printf("HELLLOO\n");
+			printMatrix(L21LT21, blockSize);
 			//printf("L%d0\n", i);
 			//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 			//printf("LT%d0\n", j);
@@ -512,7 +516,7 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 {
 	if (blockCount == 1)/*{{{*/
 	{
-		cholesky(**L, **A, blockSize);
+		choleskySingle(**L, **A, blockSize);
 		return;
 	}
 	
@@ -529,7 +533,7 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 	//printMatrix(*A11, blockSize);
 	//printf("L11\n");
 	//printMatrix(*L11, blockSize);
-	cholesky(*L11, *A11, blockSize);
+	choleskySingle(*L11, *A11, blockSize);
 	//printMatrix(*L11, blockSize);
 	//printf("Hello new stack\n");
 	//printf("BlockCount: %d\n", blockCount);
@@ -570,6 +574,21 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 			//Calculate L21 * LT21
 			multiMatrixLowerTransDouble(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
 				blockSize, blockSize, blockSize);
+			if ( i == j)
+			{
+				//printf("I and J are %d\n", i);
+				//printMatrix(*L21LT21, blockSize);
+				int row,col;
+				for(col = 1; col < blockSize; col++)
+				{
+					for (row = 0; row < col; row++)
+					{
+						L21LT21[row][col] = 0;
+					}	
+				}
+				//printf("After cleared top\n");
+				//printMatrix(*L21LT21, blockSize);
+			}
 			//printf("L%d0\n", i);
 			//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 			//printf("LT%d0\n", j);
@@ -585,6 +604,21 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 			//printInt(&(L[IDX(i,j, blockCount)]), blockSize, blockSize);
 			//Subtract it from A22
 			subMatrixDouble(A[IDX(i,j, blockCount)], L21LT21, blockSize, blockSize); 
+			if ( i == j)
+			{
+				//printf("I and J are %d\n", i);
+				//printMatrix(*L21LT21, blockSize);
+				int row,col;
+				for(col = 1; col < blockSize; col++)
+				{
+					for (row = 0; row < col; row++)
+					{
+						A[IDX(i,j,blockCount)][row][col] = 0;
+					}	
+				}
+				//printf("HELLOOO After cleared top\n");
+				//printMatrix(*(A[IDX(i,j,blockCount)]), blockSize);
+			}
 			//printf("A22 (After) with (%d, %d)\n", i, j);
 			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
 			//printf("\n");
