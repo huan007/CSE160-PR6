@@ -401,6 +401,7 @@ void blockCholeskyDouble(double ***A, double*** L, int blockCount, int blockSize
 	}
 	free(newA);
 	printf("Total time taken to computer all the L21: %6.4f\n", time_L21);
+	printf("Total time taken to computer all the L22: %6.4f\n", time_L22);
 	/*}}}*/
 }
 
@@ -569,8 +570,8 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 	for (i = 1; i < blockCount; i++)
 	{
 #ifdef _OPENMP
-		printf("Hello from thread %d\n", omp_get_thread_num());
-		printf("(%d) A[] = %d \t L[] = %d\n", omp_get_thread_num(), *A[IDX(i,0,blockCount)], *L[IDX(i,0,blockCount)]);
+		//printf("Hello from thread %d\n", omp_get_thread_num());
+		//printf("(%d) A[] = %d \t L[] = %d\n", omp_get_thread_num(), *A[IDX(i,0,blockCount)], *L[IDX(i,0,blockCount)]);
 #endif
 		computeMatrixDouble(A[IDX(i, 0, blockCount)], L[IDX(i, 0, blockCount)], 
 			LT11, blockSize, blockSize);
@@ -578,27 +579,31 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 		//printf("L21[%d]\n", i);
 		//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 	}
-	printf("Done parallel L21\n");
+	//printf("Done parallel L21\n");
 	double stop = get_clock();
 	double total = stop - start;
 	time_L21 += total;
+	start = get_clock();
 	//------STEP 3: Update A22-------------
 	//printf("Update...\n");
+#pragma omp parallel for num_threads(thread_count) schedule (dynamic, 1) \
+	private(i,j)
 	for (i = 1; i < blockCount; i++)
 	{
 		for (j = 1; j < i+1; j++)
 		{
 			//printf("L%d0 * LT%d0\n", i, j);
+#pragma omp private(L21LT21, row, col)
 			double ** L21LT21;
+			int row,col;
 			createContiguousArrayDouble(&L21LT21, blockSize, blockSize);
 			//Calculate L21 * LT21
 			multiMatrixLowerTransDouble(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
 				blockSize, blockSize, blockSize);
-			if ( i == j)
+			if (i == j)
 			{
 				//printf("I and J are %d\n", i);
 				//printMatrix(*L21LT21, blockSize);
-				int row,col;
 				for(col = 1; col < blockSize; col++)
 				{
 					for (row = 0; row < col; row++)
@@ -609,26 +614,12 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 				//printf("After cleared top\n");
 				//printMatrix(*L21LT21, blockSize);
 			}
-			//printf("L%d0\n", i);
-			//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
-			//printf("LT%d0\n", j);
-			//printInt(&(L[IDX(j,0, blockCount)]), blockSize, blockSize);
-			//printf("L21LT21\n", j);
-			//printInt(&(L21LT21), blockSize, blockSize);
-			//Copy A22 to L22
-			//sumMatrixInt(L[IDX(i,j,blockCount)], A[IDX(i,j,blockCount)], blockSize,
-			//	blockSize);
-			//printf("A22\n", j);
-			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
-			//printf("L22\n", j);
-			//printInt(&(L[IDX(i,j, blockCount)]), blockSize, blockSize);
 			//Subtract it from A22
 			subMatrixDouble(A[IDX(i,j, blockCount)], L21LT21, blockSize, blockSize); 
 			if ( i == j)
 			{
 				//printf("I and J are %d\n", i);
 				//printMatrix(*L21LT21, blockSize);
-				int row,col;
 				for(col = 1; col < blockSize; col++)
 				{
 					for (row = 0; row < col; row++)
@@ -636,8 +627,6 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 						A[IDX(i,j,blockCount)][row][col] = 0;
 					}	
 				}
-				//printf("HELLOOO After cleared top\n");
-				//printMatrix(*(A[IDX(i,j,blockCount)]), blockSize);
 			}
 			//printf("A22 (After) with (%d, %d)\n", i, j);
 			//printInt(&(A[IDX(i,j, blockCount)]), blockSize, blockSize);
@@ -648,6 +637,9 @@ void blockDouble(double ***A, double*** L, int blockCount, int blockSize)
 			deleteMatrixDouble(L21LT21, blockSize, blockSize);
 		}
 	}
+	stop = get_clock();
+	total = stop - start;
+	time_L22 += total;
 	//------Recursion: Construct new A and L with decremented size-----
 	int newBlockCount = blockCount - 1;
 	double ***newA = malloc(newBlockCount * newBlockCount * sizeof(double**));
