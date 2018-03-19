@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include "huanAlgo.h"
-#include "cholesky.h"
+#include "choleskyCommon.h"
 
 #define IDX(i,j,n) ((i*n)+j)
 #ifdef _OPENMP
@@ -465,8 +465,8 @@ void blockInt(int ***A, int*** L, int blockCount, int blockSize)
 			//Calculate L21 * LT21
 			multiMatrixLowerTransInt(L21LT21, L[IDX(i,0, blockCount)], L[IDX(j,0, blockCount)],
 				blockSize, blockSize, blockSize);
-			printf("HELLLOO\n");
-			printMatrix(L21LT21, blockSize);
+//			printf("HELLLOO\n");
+//			printMatrix(L21LT21, blockSize);
 			//printf("L%d0\n", i);
 			//printInt(&(L[IDX(i,0, blockCount)]), blockSize, blockSize);
 			//printf("LT%d0\n", j);

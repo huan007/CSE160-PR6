@@ -16,3 +16,4 @@ int multT(double *result, double *A, int N, int lowerT);
 int validate(double *A, double * L, int N, double thresh);
 void init_array(int N, int trueRandom, double *A);
 void cholesky(double *L, double *A, int N);
+void choleskySingle(double *L, double *A, int N);

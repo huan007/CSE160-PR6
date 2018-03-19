@@ -2,10 +2,14 @@
 #include <time.h>
 #include <stdio.h>
 #include "huanAlgo.h"
-#include "cholesky.h"
+#include "choleskyCommon.h"
+#include "cs160validate.h"
 
 #ifdef _OPENMP
 #include <omp.h>
+#define NUMARGS 4
+#else
+#define NUMARGS 3
 #endif
 
 #define MAXNUM 9
@@ -20,13 +24,17 @@
 
 void usage()
 {
-	printf("usage: blockd <size> <count> <thread>\n");
+#ifdef _OPENMP
+	printf("usage: blockCholeskyMP <K> <blksize> <nthread>\n");
+#else
+	printf("usage: blockCholesky <K> <blksize>\n");
+#endif
 	exit(-1);
 }
 int main(int argc, char** argv)
 {
 	printf("# of arguments: %d\n", argc);
-	if (argc < 4)
+	if (argc < NUMARGS)
 		usage();
 
 	int N;
@@ -168,6 +176,7 @@ int main(int argc, char** argv)
 		time_veri += totalTime;
 		//printf("*TIME* (Verification) Time taken: %6.4f\n", totalTime);
 		printf("Bad Count = %d\n", badCount);
+		cs160validate(*A, *fullResult, N, THRESH); 
 		//if (badCount > 0)
 		//	exit(-1);
 

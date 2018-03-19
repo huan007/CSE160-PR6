@@ -34,11 +34,25 @@ mp:	mp.c
 	gcc -g -o mp mp.c -lm -lpthread -fopenmp
 	gcc -g -o mpser mp.c -lm -lpthread 
 
+cholesky: cholesky.c choleskyCommon.c choleskyCommon.h cs160validate.c
+	gcc -g -o cholesky -O3 cholesky.c choleskyCommon.c cs160validate.c -lm -fopenmp -lpthread
+
+blockCholesky: huanAlgo.c testBlockDouble.c cs160validate.c cs160validate.o
+	gcc -g -o blockCholesky -O3 testBlockDouble.c huanAlgo.c choleskyCommon.c cs160validate.o -lm
+
+blockCholeskyMP: huanAlgo.c testBlockDouble.c cs160validate.c cs160validate.o
+	gcc -g -o blockCholeskyMP -O3 testBlockDouble.c huanAlgo.c choleskyCommon.c cs160validate.o -lm -lpthread -fopenmp
+
+cs160validate.o: cs160validate.c cs160validate.h
+	gcc -c -fopenmp -O3 cs160validate.c
+
+cs160validate: cs160validate.c cs160validate.h
+	gcc -c -fopenmp -O3 cs160validate.c
+
 clean:
 	rm *.o
-	rm testD
-	rm operation
-	rm block
-	rm blockd
+	rm cholesky
+	rm blockCholesky
+	rm blockCholeskyMP
 	touch cholesky.c 
-	touch choleskyPara.c
+	touch choleskyCommon.c

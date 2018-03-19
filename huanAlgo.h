@@ -24,3 +24,5 @@ void choleskyInt(int *L, int *A, int N);
 int multTInt(int *result, int *A, int N, int lowerT);
 void deleteMatrixInt(int **u, int localM, int localN);
 void deleteMatrixDouble(double **u, int localM, int localN);
+void blockToFullDouble(double ***block, double **full, int blockCount, int blockSize);
+void fullToBlockDouble(double ***block, double **full, int blockCount, int blockSize);
