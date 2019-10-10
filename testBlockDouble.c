@@ -7,9 +7,9 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#define NUMARGS 4
+#define NUMARGS 5
 #else
-#define NUMARGS 3
+#define NUMARGS 4
 #endif
 
 #define MAXNUM 9
@@ -25,9 +25,9 @@
 void usage()
 {
 #ifdef _OPENMP
-	printf("usage: blockCholeskyMP <K> <blksize> <nthread>\n");
+	printf("usage: blockCholeskyMP <blockSize> <blockCount> <numTrials> <nthread>\n");
 #else
-	printf("usage: blockCholesky <K> <blksize>\n");
+	printf("usage: blockCholesky <blockSize> <blockCount> <numTrials>\n");
 #endif
 	exit(-1);
 }
@@ -40,9 +40,9 @@ int main(int argc, char** argv)
 	int N;
 	int blockSize = atoi(argv[1]);
 	int blockCount = atoi(argv[2]);
-	int trials = 1;
+	int trials = atoi(argv[3]);
 #ifdef _OPENMP
-	thread_count = atoi(argv[3]);
+	thread_count = atoi(argv[4]);
 #else
 	thread_count = 1;
 #endif
