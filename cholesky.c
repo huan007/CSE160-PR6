@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 	double temp;
 	if(argc < ARGS_COUNT) 
 	{
-		fprintf(stderr,"Wrong # of arguments.\nUsage: %s array_size",argv[0]);
+		fprintf(stderr,"Wrong # of arguments.\nUsage: %s array_size\n",argv[0]);
 		return -1;
 	}
 	n = atoi(argv[1]);
