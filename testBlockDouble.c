@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
 	srand(1);
 	srand48(time(NULL));
-	printf("Start testBlockDouble SIDAAA!\n");
+	printf("Start testBlockDouble!\n");
 	for (count = 0; count < trials; count++)
 	{
 		double start, end;
